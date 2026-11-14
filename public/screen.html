@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <title>十佳歌手大赛 · 实时大屏榜单</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif;
+      background: radial-gradient(circle at top, #2e1065 0%, #090d16 70%);
+      color: #fff;
+      min-height: 100vh;
+      padding: 28px 48px;
+      overflow-x: hidden;
+    }
+    .top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 28px;
+      border-bottom: 1px solid rgba(255,255,255,0.12);
+      padding-bottom: 18px;
+    }
+    .top h1 { font-size: 36px; font-weight: 800; letter-spacing: 1px; }
+    .meta { display: flex; gap: 16px; align-items: center; }
+    .pill {
+      background: rgba(255,255,255,0.1);
+      padding: 8px 18px;
+      border-radius: 99px;
+      font-size: 16px;
+      color: #e2e8f0;
+    }
+    .pill.open { background: rgba(16, 185, 129, 0.25); color: #6ee7b7; border: 1px solid #10b981; }
+    .pill.paused { background: rgba(245, 158, 11, 0.25); color: #fde68a; border: 1px solid #f59e0b; }
+    .pill.ended { background: rgba(239, 68, 68, 0.25); color: #fca5a5; border: 1px solid #ef4444; }
+
+    .board { display: flex; flex-direction: column; gap: 14px; }
+    .row {
+      display: grid;
+      grid-template-columns: 60px 220px 1fr 220px;
+      align-items: center;
+      gap: 20px;
+      background: rgba(255,255,255,0.05);
+      padding: 14px 22px;
+      border-radius: 14px;
+      border: 1px solid rgba(255,255,255,0.06);
+    }
+    .rank {
+      font-size: 24px;
+      font-weight: 800;
+      text-align: center;
+      color: #94a3b8;
+    }
+    .row:nth-child(1) .rank { color: #fbbf24; font-size: 30px; }
+    .row:nth-child(2) .rank { color: #e2e8f0; font-size: 28px; }
+    .row:nth-child(3) .rank { color: #d97706; font-size: 26px; }
+
+    .info .name { font-size: 20px; font-weight: 700; }
+    .info .song { font-size: 13px; color: #94a3b8; margin-top: 2px; }
+
+    .bar-wrap {
+      height: 28px;
+      background: rgba(255,255,255,0.08);
+      border-radius: 99px;
+      overflow: hidden;
+    }
+    .bar {
+      height: 100%;
+      background: linear-gradient(90deg, #8b5cf6, #ec4899);
+      border-radius: 99px;
+      transition: width 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+      min-width: 4px;
+    }
+    .row:nth-child(1) .bar { background: linear-gradient(90deg, #f59e0b, #ef4444); }
+
+    .score-box { text-align: right; }
+    .total { font-size: 26px; font-weight: 800; color: #f8fafc; }
+    .detail { font-size: 13px; color: #cbd5e1; margin-top: 2px; }
+  </style>
+</head>
+<body>
+  <div class="top">
+    <h1 id="title">十佳歌手大赛 · 实时投票</h1>
+    <div class="meta">
+      <div class="pill" id="roundInfo">第 1 轮</div>
+      <div class="pill" id="statsInfo">已投 0 票</div>
+      <div class="pill" id="statusPill">加载中</div>
+    </div>
+  </div>
+
+  <div id="board" class="board"></div>
+
+  <script>
+    function render(data) {
+      const { settings, leaderboard, stats } = data;
+      document.getElementById('title').textContent = settings.title;
+      document.getElementById('roundInfo').textContent = `第 ${settings.currentRound} 轮 · 导师权重 ×${settings.judgeWeight}`;
+      document.getElementById('statsInfo').textContent = `观众已投 ${stats.totalAudienceVotes} 票 · 导师已投 ${stats.totalJudgeVotes}/${stats.totalJudges}`;
+
+      const statusPill = document.getElementById('statusPill');
+      const map = { open: '投票进行中', paused: '投票已暂停', ended: '投票已结束' };
+      statusPill.textContent = map[settings.votingStatus] || settings.votingStatus;
+      statusPill.className = `pill ${settings.votingStatus}`;
+
+      const sorted = [...leaderboard].sort((a, b) => b.totalScore - a.totalScore);
+      const maxScore = Math.max(...sorted.map(c => c.totalScore), 1);
+
+      document.getElementById('board').innerHTML = sorted.map((c, idx) => {
+        const pct = Math.round((c.totalScore / maxScore) * 100);
+        return `
+          <div class="row">
+            <div class="rank">${idx + 1}</div>
+            <div class="info">
+              <div class="name">${c.number}号 ${c.name}</div>
+              <div class="song">${c.song || ''}</div>
+            </div>
+            <div class="bar-wrap">
+              <div class="bar" style="width: ${c.totalScore === 0 ? 0 : pct}%"></div>
+            </div>
+            <div class="score-box">
+              <div class="total">${c.totalScore} 分</div>
+              <div class="detail">观众 ${c.audienceVotes} 票 · 导师 ${c.judgeVotes} 票</div>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function connectWS() {
+      const proto = location.protocol === 'https:' ? 'wss:' : 'ws:';
+      const ws = new WebSocket(`${proto}//${location.host}`);
+      ws.onmessage = (e) => {
+        const msg = JSON.parse(e.data);
+        if (msg.type === 'STATE_UPDATE') render(msg.data);
+      };
+      ws.onclose = () => setTimeout(connectWS, 2000);
+    }
+
+    connectWS();
+  </script>
+</body>
+</html>

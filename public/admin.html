@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>十佳歌手大赛 · 图形化管理后台</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif;
+      background: #f1f5f9;
+      color: #0f172a;
+      padding: 24px;
+    }
+    .container { max-width: 980px; margin: 0 auto; }
+    .card {
+      background: #fff;
+      border-radius: 12px;
+      padding: 20px;
+      margin-bottom: 20px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+    }
+    h1 { font-size: 24px; margin-bottom: 16px; }
+    h2 { font-size: 18px; margin-bottom: 14px; border-left: 4px solid #6366f1; padding-left: 10px; }
+    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 14px; }
+    label { display: block; font-size: 13px; color: #475569; margin-bottom: 6px; font-weight: 600; }
+    input, select {
+      width: 100%;
+      padding: 10px 12px;
+      border: 1px solid #cbd5e1;
+      border-radius: 8px;
+      font-size: 14px;
+    }
+    .btn {
+      padding: 10px 18px;
+      border: none;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      background: #6366f1;
+      color: #fff;
+    }
+    .btn:hover { opacity: 0.9; }
+    .btn-green { background: #10b981; }
+    .btn-amber { background: #f59e0b; }
+    .btn-red { background: #ef4444; }
+    .btn-gray { background: #64748b; }
+    .row-actions { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 12px; }
+    table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+    th, td { padding: 10px; border-bottom: 1px solid #e2e8f0; text-align: left; font-size: 14px; }
+    th { background: #f8fafc; color: #475569; }
+    .qr-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+      gap: 12px;
+      margin-top: 16px;
+    }
+    .qr-item {
+      border: 1px dashed #cbd5e1;
+      padding: 10px;
+      text-align: center;
+      border-radius: 8px;
+      background: #fff;
+      page-break-inside: avoid;
+    }
+    .qr-item img { width: 120px; height: 120px; }
+    .qr-item .code { font-weight: 700; font-size: 13px; margin-top: 4px; }
+    @media print {
+      body { background: #fff; padding: 0; }
+      .no-print { display: none !important; }
+      .card { box-shadow: none; padding: 0; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <!-- 登录框 -->
+    <div id="loginBox" class="card" style="max-width: 400px; margin: 80px auto;">
+      <h1>管理后台登录</h1>
+      <label>管理员密码（默认：admin）</label>
+      <input id="loginPwd" type="password" placeholder="请输入密码" />
+      <div class="row-actions">
+        <button class="btn" style="width:100%" onclick="login()">登录</button>
+      </div>
+    </div>
+
+    <!-- 主界面 -->
+    <div id="mainBox" style="display:none;">
+      <div class="no-print">
+        <h1>🎤 十佳歌手大赛 · 图形化管理后台</h1>
+
+        <!-- 快捷状态控制 -->
+        <div class="card">
+          <h2>1. 投票开关与实时状态</h2>
+          <p id="statusSummary" style="margin-bottom: 12px; color: #334155; font-size: 15px;"></p>
+          <div class="row-actions">
+            <button class="btn btn-green" onclick="setStatus('open')">▶ 立即开启投票</button>
+            <button class="btn btn-amber" onclick="setStatus('paused')">⏸ 暂停投票</button>
+            <button class="btn btn-red" onclick="setStatus('ended')">⏹ 结束本轮投票</button>
+            <a href="/screen.html" target="_blank"><button class="btn btn-gray">📺 打开大屏幕榜单</button></a>
+            <a href="/judge.html" target="_blank"><button class="btn btn-gray">🎓 打开导师投票页</button></a>
+          </div>
+        </div>
+
+        <!-- 规则与定时设置 -->
+        <div class="card">
+          <h2>2. 比赛规则、导师加权与定时设置</h2>
+          <div class="grid">
+            <div>
+              <label>活动名称</label>
+              <input id="cfgTitle" type="text" />
+            </div>
+            <div>
+              <label>当前轮次（换轮后旧门票可继续投）</label>
+              <input id="cfgRound" type="number" min="1" />
+            </div>
+            <div>
+              <label>每张门票每轮限投几票</label>
+              <input id="cfgMaxVotes" type="number" min="1" />
+            </div>
+            <div>
+              <label>导师加权（1张导师票 = 多少张观众票）</label>
+              <input id="cfgWeight" type="number" min="1" />
+            </div>
+            <div>
+              <label>定时开启时间（可选，留空则手动开启）</label>
+              <input id="cfgStartTime" type="datetime-local" />
+            </div>
+            <div>
+              <label>定时结束时间（可选，留空则手动结束）</label>
+              <input id="cfgEndTime" type="datetime-local" />
+            </div>
+            <div>
+              <label>导师口令（英文逗号分隔）</label>
+              <input id="cfgJudgeCodes" type="text" placeholder="J1,J2,J3" />
+            </div>
+            <div>
+              <label>后台登录密码</label>
+              <input id="cfgAdminPwd" type="text" />
+            </div>
+          </div>
+          <div class="row-actions">
+            <button class="btn" onclick="saveSettings()">💾 保存所有设置</button>
+            <button class="btn btn-red" onclick="resetData('round')">🗑 清空当前轮次票数</button>
+          </div>
+        </div>
+
+        <!-- 选手管理 -->
+        <div class="card">
+          <h2>3. 选手管理</h2>
+          <table>
+            <thead>
+              <tr><th>编号</th><th>姓名</th><th>参赛曲目</th><th>观众票</th><th>导师票</th><th>总分</th><th>操作</th></tr>
+            </thead>
+            <tbody id="contestantTbody"></tbody>
+          </table>
+          <div class="row-actions">
+            <button class="btn btn-gray" onclick="addContestantRow()">➕ 添加一位选手</button>
+            <button class="btn" onclick="saveContestants()">💾 保存选手列表</button>
+          </div>
+        </div>
+
+        <!-- 门票二维码生成 -->
+        <div class="card">
+          <h2>4. 门票专属二维码生成（一票一码）</h2>
+          <div class="grid">
+            <div>
+              <label>生成数量（例如：300）</label>
+              <input id="ticketCount" type="number" value="300" min="1" max="2000" />
+            </div>
+            <div>
+              <label>二维码网址前缀（默认当前网址，内网穿透时填公网域名）</label>
+              <input id="baseUrlInput" type="text" />
+            </div>
+          </div>
+          <div class="row-actions">
+            <button class="btn" onclick="generateTickets()">🎟 批量生成门票码</button>
+            <button class="btn btn-green" onclick="exportQRCodes()">🖨 加载并打印观众门票二维码</button>
+            <button class="btn btn-amber" onclick="exportJudgeQRCodes()">🎓 生成导师专属二维码</button>
+            <button class="btn btn-red" onclick="resetData('tickets')">🗑 清空所有门票码</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- 二维码打印区域 -->
+      <div id="qrSection" class="card" style="display:none;">
+        <div class="no-print" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+          <h2 style="margin:0;">门票二维码排版（共 <span id="qrTotal">0</span> 张）</h2>
+          <button class="btn btn-green" onclick="window.print()">🖨 立即打印 / 另存为 PDF</button>
+        </div>
+        <div id="qrGrid" class="qr-grid"></div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let token = localStorage.getItem('admin_token') || '';
+    let contestants = [];
+
+    document.getElementById('baseUrlInput').value = location.origin;
+
+    async function api(url, method = 'GET', body = null) {
+      const opts = {
+        method,
+        headers: { 'Content-Type': 'application/json', 'x-admin-token': token }
+      };
+      if (body) opts.body = JSON.stringify(body);
+      const res = await fetch(url, opts);
+      if (res.status === 401) {
+        localStorage.removeItem('admin_token');
+        location.reload();
+      }
+      return res.json();
+    }
+
+    async function login() {
+      const password = document.getElementById('loginPwd').value;
+      const res = await fetch('/api/admin/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ password })
+      });
+      const data = await res.json();
+      if (!res.ok) return alert(data.error || '登录失败');
+      token = data.token;
+      localStorage.setItem('admin_token', token);
+      loadDashboard();
+    }
+
+    async function loadDashboard() {
+      document.getElementById('loginBox').style.display = 'none';
+      document.getElementById('mainBox').style.display = 'block';
+      const data = await api('/api/admin/config');
+      const { settings, publicState } = data;
+      const { stats, leaderboard } = publicState;
+
+      const statusMap = { open: '🟢 投票进行中', paused: '🟡 已暂停', ended: '🔴 已结束' };
+      document.getElementById('statusSummary').textContent =
+        `当前状态：${statusMap[settings.votingStatus]} ｜ 第 ${settings.currentRound} 轮 ｜ 已生成门票 ${stats.totalTickets} 张 ｜ 本轮观众已投 ${stats.totalAudienceVotes} 票 ｜ 导师已投 ${stats.totalJudgeVotes}/${stats.totalJudges}`;
+
+      document.getElementById('cfgTitle').value = settings.title;
+      document.getElementById('cfgRound').value = settings.currentRound;
+      document.getElementById('cfgMaxVotes').value = settings.maxVotesPerTicket;
+      document.getElementById('cfgWeight').value = settings.judgeWeight;
+      document.getElementById('cfgStartTime').value = settings.startTime || '';
+      document.getElementById('cfgEndTime').value = settings.endTime || '';
+      document.getElementById('cfgJudgeCodes').value = (settings.judgeCodes || []).join(',');
+      document.getElementById('cfgAdminPwd').value = settings.adminPassword;
+
+      contestants = leaderboard;
+      renderContestants();
+    }
+
+    function renderContestants() {
+      document.getElementById('contestantTbody').innerHTML = contestants.map((c, idx) => `
+        <tr>
+          <td><input style="width:60px" value="${c.number}" onchange="contestants[${idx}].number=this.value" /></td>
+          <td><input value="${c.name}" onchange="contestants[${idx}].name=this.value" /></td>
+          <td><input value="${c.song || ''}" onchange="contestants[${idx}].song=this.value" /></td>
+          <td>${c.audienceVotes}</td>
+          <td>${c.judgeVotes}</td>
+          <td><strong>${c.totalScore}</strong></td>
+          <td><button class="btn btn-red" style="padding:6px 10px" onclick="removeContestant(${idx})">删除</button></td>
+        </tr>
+      `).join('');
+    }
+
+    function addContestantRow() {
+      const nextNum = String(contestants.length + 1).padStart(2, '0');
+      contestants.push({ id: Date.now(), number: nextNum, name: `新选手 ${nextNum}`, song: '', audienceVotes: 0, judgeVotes: 0, totalScore: 0 });
+      renderContestants();
+    }
+
+    function removeContestant(idx) {
+      contestants.splice(idx, 1);
+      renderContestants();
+    }
+
+    async function saveContestants() {
+      await api('/api/admin/contestants', 'POST', { contestants });
+      alert('选手列表已保存！');
+      loadDashboard();
+    }
+
+    async function setStatus(votingStatus) {
+      await api('/api/admin/settings', 'POST', { votingStatus });
+      loadDashboard();
+    }
+
+    async function saveSettings() {
+      await api('/api/admin/settings', 'POST', {
+        title: document.getElementById('cfgTitle').value,
+        currentRound: Number(document.getElementById('cfgRound').value),
+        maxVotesPerTicket: Number(document.getElementById('cfgMaxVotes').value),
+        judgeWeight: Number(document.getElementById('cfgWeight').value),
+        startTime: document.getElementById('cfgStartTime').value,
+        endTime: document.getElementById('cfgEndTime').value,
+        judgeCodes: document.getElementById('cfgJudgeCodes').value.split(',').map(s => s.trim()).filter(Boolean),
+        adminPassword: document.getElementById('cfgAdminPwd').value
+      });
+      alert('设置已保存！');
+      loadDashboard();
+    }
+
+    async function generateTickets() {
+      const count = Number(document.getElementById('ticketCount').value) || 100;
+      const res = await api('/api/admin/tickets/generate', 'POST', { count });
+      alert(`成功生成 ${res.generated} 张门票码！当前共有 ${res.total} 张门票。`);
+      loadDashboard();
+    }
+
+    async function exportQRCodes() {
+      const baseUrl = document.getElementById('baseUrlInput').value.trim();
+      const data = await api(`/api/admin/tickets/export?baseUrl=${encodeURIComponent(baseUrl)}`);
+      if (!data.tickets || data.tickets.length === 0) {
+        return alert('还没有生成门票码，请先点击“批量生成门票码”');
+      }
+      document.getElementById('qrSection').style.display = 'block';
+      document.getElementById('qrTotal').textContent = data.tickets.length;
+      document.getElementById('qrGrid').innerHTML = data.tickets.map(t => `
+        <div class="qr-item">
+          <img src="${t.qrDataUrl}" />
+          <div class="code">#${String(t.index).padStart(3, '0')} · ${t.code}</div>
+        </div>
+      `).join('');
+    }
+
+    async function exportJudgeQRCodes() {
+      const baseUrl = document.getElementById('baseUrlInput').value.trim();
+      const data = await api(`/api/admin/judges/qr?baseUrl=${encodeURIComponent(baseUrl)}`);
+      if (!data.judges || data.judges.length === 0) {
+        return alert('请先在上方设置导师口令');
+      }
+      document.getElementById('qrSection').style.display = 'block';
+      document.getElementById('qrTotal').textContent = data.judges.length;
+      document.getElementById('qrGrid').innerHTML = data.judges.map(j => `
+        <div class="qr-item">
+          <img src="${j.qrDataUrl}" />
+          <div class="code">导师 ${j.index} · 口令 ${j.code}</div>
+        </div>
+      `).join('');
+    }
+
+    async function resetData(type) {
+      if (!confirm(type === 'round' ? '确定要清空当前轮次的所有票数吗？' : '确定要清空所有已生成的门票码吗？')) return;
+      await api('/api/admin/reset', 'POST', { type });
+      loadDashboard();
+    }
+
+    if (token) loadDashboard();
+  </script>
+</body>
+</html>

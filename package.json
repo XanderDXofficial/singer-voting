@@ -1,0 +1,14 @@
+{
+  "name": "singer-voting",
+  "version": "1.0.0",
+  "description": "十佳歌手大赛实时投票系统（支持一票一码、导师加权、大屏实时榜单、图形化后台）",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.21.2",
+    "qrcode": "^1.5.4",
+    "ws": "^8.18.0"
+  }
+}
