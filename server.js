@@ -23,32 +23,48 @@ function createDefaultState() {
   return {
     settings: {
       title: '十佳歌手大赛 · 实时投票',
+      mode: 'classic', // 'classic' | 'top10'
       currentRound: 1,
+      activeGroup: 0, // 0 = 全部，1-8 = 十佳模式第1轮双人舞台当前投票组
+      screenView: 'live', // 'live' | 'r1-groups' | 'r1-duels'
       maxVotesPerTicket: 1,
       judgeWeight: 20, // 1张导师票 = 20张观众票
       votingStatus: 'paused', // 'open' | 'paused' | 'ended'
       startTime: '', // ISO string or empty
       endTime: '',   // ISO string or empty
       adminPassword: 'admin',
-      judgeCodes: ['J1', 'J2', 'J3']
+      judgeCodes: ['J1', 'J2', 'J3'],
+      activeContestantIds: []
     },
     contestants: Array.from({ length: 10 }, (_, i) => ({
       id: i + 1,
       number: String(i + 1).padStart(2, '0'),
       name: `选手 ${i + 1} 号`,
-      song: `参赛曲目 ${i + 1}`
+      song: `参赛曲目 ${i + 1}`,
+      group: Math.floor(i / 2) + 1
     })),
-    // tickets: { [code]: { createdAt, votedRounds: { [round]: [contestantIds] } } }
+    // tickets: { [code]: { createdAt, votedRounds: { [bucketKey]: [contestantIds] } } }
     tickets: {},
-    // judgeVotes: { [round]: { [judgeCode]: [contestantIds] } }
-    judgeVotes: {}
+    // judgeVotes: { [bucketKey]: { [judgeCode]: [contestantIds] } }
+    judgeVotes: {},
+    // manualVotes: { [bucketKey]: { [contestantId]: number } }
+    manualVotes: {}
   };
 }
 
 let state = createDefaultState();
 if (fs.existsSync(STATE_FILE)) {
   try {
-    state = JSON.parse(fs.readFileSync(STATE_FILE, 'utf8'));
+    const loaded = JSON.parse(fs.readFileSync(STATE_FILE, 'utf8'));
+    const def = createDefaultState();
+    state = {
+      ...def,
+      ...loaded,
+      settings: { ...def.settings, ...(loaded.settings || {}) },
+      tickets: loaded.tickets || {},
+      judgeVotes: loaded.judgeVotes || {},
+      manualVotes: loaded.manualVotes || {}
+    };
   } catch (e) {
     console.error('读取状态文件失败，使用默认配置:', e);
   }
@@ -64,9 +80,31 @@ function saveState() {
   }, 50);
 }
 
+// 获取当前投票使用的存储桶 Key（支持十佳模式第1轮按组独立投票）
+function getVoteBucketKey() {
+  if (
+    state.settings.mode === 'top10' &&
+    Number(state.settings.currentRound) === 1 &&
+    Number(state.settings.activeGroup) > 0
+  ) {
+    return `1-G${Number(state.settings.activeGroup)}`;
+  }
+  return String(state.settings.currentRound);
+}
+
+// 获取当前轮次需要汇总的所有存储桶 Key
+function getRoundBucketKeys() {
+  const round = String(state.settings.currentRound);
+  if (state.settings.mode === 'top10' && Number(round) === 1) {
+    return ['1', '1-G1', '1-G2', '1-G3', '1-G4', '1-G5', '1-G6', '1-G7', '1-G8'];
+  }
+  return [round];
+}
+
 // 计算当前轮次的排行榜数据
 function getPublicState() {
-  const round = String(state.settings.currentRound);
+  const bucketKeys = getRoundBucketKeys();
+  const activeBucketKey = getVoteBucketKey();
   const audienceCounts = {};
   const judgeCounts = {};
 
@@ -77,50 +115,113 @@ function getPublicState() {
 
   let totalAudienceVotes = 0;
   Object.values(state.tickets).forEach(ticket => {
-    const voted = ticket.votedRounds?.[round];
-    if (Array.isArray(voted)) {
-      totalAudienceVotes++;
-      voted.forEach(id => {
-        if (audienceCounts[id] !== undefined) audienceCounts[id]++;
-      });
-    }
+    bucketKeys.forEach(bk => {
+      const voted = ticket.votedRounds?.[bk];
+      if (Array.isArray(voted)) {
+        totalAudienceVotes++;
+        voted.forEach(id => {
+          if (audienceCounts[id] !== undefined) audienceCounts[id]++;
+        });
+      }
+    });
   });
 
-  const roundJudgeVotes = state.judgeVotes[round] || {};
+  // 合并平滑加票数据
+  bucketKeys.forEach(bk => {
+    const roundManual = state.manualVotes?.[bk] || {};
+    Object.entries(roundManual).forEach(([cid, count]) => {
+      const numId = Number(cid);
+      const val = Number(count) || 0;
+      if (audienceCounts[numId] !== undefined && val > 0) {
+        audienceCounts[numId] += val;
+        totalAudienceVotes += val;
+      }
+    });
+  });
+
+  // 当前正在投票的桶（逐组投时显示当前组的导师进度，否则汇总本轮）
   let totalJudgeVotes = 0;
-  Object.values(roundJudgeVotes).forEach(voted => {
-    if (Array.isArray(voted)) {
-      totalJudgeVotes++;
-      voted.forEach(id => {
-        if (judgeCounts[id] !== undefined) judgeCounts[id]++;
-      });
-    }
+  const judgeBucketsToCount = Number(state.settings.activeGroup) > 0 ? [activeBucketKey] : bucketKeys;
+  judgeBucketsToCount.forEach(bk => {
+    const roundJudgeVotes = state.judgeVotes[bk] || {};
+    Object.values(roundJudgeVotes).forEach(voted => {
+      if (Array.isArray(voted)) {
+        totalJudgeVotes++;
+      }
+    });
+  });
+  bucketKeys.forEach(bk => {
+    const roundJudgeVotes = state.judgeVotes[bk] || {};
+    Object.values(roundJudgeVotes).forEach(voted => {
+      if (Array.isArray(voted)) {
+        voted.forEach(id => {
+          if (judgeCounts[id] !== undefined) judgeCounts[id]++;
+        });
+      }
+    });
   });
 
   const weight = Number(state.settings.judgeWeight) || 1;
-  const leaderboard = state.contestants.map(c => {
-    const aVotes = audienceCounts[c.id] || 0;
-    const jVotes = judgeCounts[c.id] || 0;
-    const totalScore = aVotes + jVotes * weight;
-    return {
+  const activeGroupNum = Number(state.settings.activeGroup) || 0;
+  const isTop10R1 = state.settings.mode === 'top10' && Number(state.settings.currentRound) === 1;
+
+  const activeSet =
+    state.settings.mode === 'top10' &&
+    Array.isArray(state.settings.activeContestantIds) &&
+    state.settings.activeContestantIds.length > 0
+      ? new Set(state.settings.activeContestantIds.map(Number))
+      : null;
+
+  const allScored = state.contestants
+    .filter(c => !activeSet || activeSet.has(c.id))
+    .map(c => {
+      const aVotes = audienceCounts[c.id] || 0;
+      const jVotes = judgeCounts[c.id] || 0;
+      const totalScore = aVotes + jVotes * weight;
+      return {
+        ...c,
+        audienceVotes: aVotes,
+        judgeVotes: jVotes,
+        totalScore
+      };
+    });
+
+  let groupTotals = null;
+  let allRound1Leaderboard = null;
+  let leaderboard = allScored;
+
+  if (isTop10R1) {
+    groupTotals = {};
+    allScored.forEach(c => {
+      const g = c.group || 1;
+      groupTotals[g] = (groupTotals[g] || 0) + c.totalScore;
+    });
+    allRound1Leaderboard = allScored.map(c => ({
       ...c,
-      audienceVotes: aVotes,
-      judgeVotes: jVotes,
-      totalScore
-    };
-  });
+      groupTotal: groupTotals[c.group || 1] || 0
+    }));
+    leaderboard = activeGroupNum > 0
+      ? allRound1Leaderboard.filter(c => Number(c.group) === activeGroupNum)
+      : allRound1Leaderboard;
+  }
 
   return {
     settings: {
       title: state.settings.title,
+      mode: state.settings.mode || 'classic',
       currentRound: state.settings.currentRound,
+      activeGroup: activeGroupNum,
+      screenView: state.settings.screenView || 'live',
       maxVotesPerTicket: state.settings.maxVotesPerTicket,
       judgeWeight: state.settings.judgeWeight,
       votingStatus: state.settings.votingStatus,
       startTime: state.settings.startTime,
-      endTime: state.settings.endTime
+      endTime: state.settings.endTime,
+      activeContestantIds: state.settings.activeContestantIds || []
     },
     leaderboard,
+    allRound1Leaderboard,
+    groupTotals,
     stats: {
       totalTickets: Object.keys(state.tickets).length,
       totalAudienceVotes,
@@ -165,8 +266,24 @@ setInterval(() => {
   }
 }, 1000);
 
-app.use(express.json());
+app.use(express.json({ limit: '5mb' }));
 app.use(express.static(path.join(__dirname, 'public')));
+
+// 1张/秒平滑加票管理
+const activeDrips = new Map(); // contestantId -> { timer, remaining, round }
+
+function stopAllDrips() {
+  activeDrips.forEach(entry => clearInterval(entry.timer));
+  activeDrips.clear();
+}
+
+function getDripStatus() {
+  return Array.from(activeDrips.entries()).map(([contestantId, info]) => ({
+    contestantId,
+    remaining: info.remaining,
+    round: info.round
+  }));
+}
 
 // 简单的管理员鉴权中间件
 const adminTokens = new Set();
@@ -194,17 +311,33 @@ app.get('/api/state', (req, res) => {
   res.json(getPublicState());
 });
 
-// 获取完整后台配置（含导师口令）
+// 获取完整后台配置（含导师口令、全部选手及当前加票任务）
 app.get('/api/admin/config', requireAdmin, (req, res) => {
   res.json({
     settings: state.settings,
+    allContestants: state.contestants,
+    activeDrips: getDripStatus(),
     publicState: getPublicState()
   });
 });
 
 // 更新设置
 app.post('/api/admin/settings', requireAdmin, (req, res) => {
-  const allowed = ['title', 'currentRound', 'maxVotesPerTicket', 'judgeWeight', 'votingStatus', 'startTime', 'endTime', 'adminPassword', 'judgeCodes'];
+  const allowed = [
+    'title',
+    'mode',
+    'currentRound',
+    'activeGroup',
+    'screenView',
+    'maxVotesPerTicket',
+    'judgeWeight',
+    'votingStatus',
+    'startTime',
+    'endTime',
+    'adminPassword',
+    'judgeCodes',
+    'activeContestantIds'
+  ];
   allowed.forEach(key => {
     if (req.body[key] !== undefined) {
       state.settings[key] = req.body[key];
@@ -215,21 +348,137 @@ app.post('/api/admin/settings', requireAdmin, (req, res) => {
   res.json({ ok: true, state: getPublicState() });
 });
 
-// 选手管理
+// 选手管理（支持保留空白姓名/曲目及组别）
 app.post('/api/admin/contestants', requireAdmin, (req, res) => {
   const { contestants } = req.body;
   if (!Array.isArray(contestants)) {
     return res.status(400).json({ error: '选手数据格式错误' });
   }
   state.contestants = contestants.map((c, idx) => ({
-    id: c.id || Date.now() + idx,
+    id: Number(c.id) || Date.now() + idx,
     number: String(c.number || idx + 1).padStart(2, '0'),
-    name: String(c.name || `选手 ${idx + 1}`),
-    song: String(c.song || '')
+    name: c.name !== undefined ? String(c.name) : '',
+    song: c.song !== undefined ? String(c.song) : '',
+    group: Number(c.group) || Math.floor(idx / 2) + 1
   }));
   saveState();
   broadcastState();
   res.json({ ok: true, contestants: state.contestants });
+});
+
+// 十佳定制模式：初始化16位空白选手（8组两人配对）
+app.post('/api/admin/top10/init-16', requireAdmin, (req, res) => {
+  stopAllDrips();
+  state.contestants = Array.from({ length: 16 }, (_, i) => ({
+    id: i + 1,
+    number: String(i + 1).padStart(2, '0'),
+    name: '',
+    song: '',
+    group: Math.floor(i / 2) + 1
+  }));
+  state.settings.mode = 'top10';
+  state.settings.currentRound = 1;
+  state.settings.activeGroup = 0;
+  state.settings.screenView = 'live';
+  state.settings.activeContestantIds = [];
+  state.settings.votingStatus = 'paused';
+  saveState();
+  broadcastState();
+  res.json({ ok: true, contestants: state.contestants });
+});
+
+// 十佳定制模式：晋级下一轮
+app.post('/api/admin/top10/advance', requireAdmin, (req, res) => {
+  const nextRound = Number(req.body.nextRound);
+  const qualifiedIds = Array.isArray(req.body.qualifiedIds) ? req.body.qualifiedIds.map(Number) : [];
+  if (!nextRound || qualifiedIds.length === 0) {
+    return res.status(400).json({ error: '请选择晋级选手与目标轮次' });
+  }
+  stopAllDrips();
+  state.settings.mode = 'top10';
+  state.settings.currentRound = nextRound;
+  state.settings.activeGroup = 0;
+  state.settings.screenView = 'live';
+  state.settings.activeContestantIds = qualifiedIds;
+  state.settings.votingStatus = 'paused';
+  saveState();
+  broadcastState();
+  res.json({ ok: true, state: getPublicState() });
+});
+
+// 项目存档导出
+app.get('/api/admin/archive/export', requireAdmin, (req, res) => {
+  res.json({
+    exportedAt: new Date().toISOString(),
+    state
+  });
+});
+
+// 项目存档导入恢复
+app.post('/api/admin/archive/import', requireAdmin, (req, res) => {
+  const incoming = req.body.state || req.body;
+  if (!incoming || !incoming.settings || !Array.isArray(incoming.contestants)) {
+    return res.status(400).json({ error: '无效的项目存档文件格式' });
+  }
+  stopAllDrips();
+  const def = createDefaultState();
+  state = {
+    ...def,
+    ...incoming,
+    settings: { ...def.settings, ...incoming.settings },
+    tickets: incoming.tickets || {},
+    judgeVotes: incoming.judgeVotes || {},
+    manualVotes: incoming.manualVotes || {}
+  };
+  saveState();
+  broadcastState();
+  res.json({ ok: true, state: getPublicState() });
+});
+
+// 人工微调（1张/秒平滑加票）
+app.post('/api/admin/drip/start', requireAdmin, (req, res) => {
+  const contestantId = Number(req.body.contestantId);
+  const count = Math.min(Math.max(Number(req.body.count) || 0, 1), 500);
+  if (!state.contestants.some(c => c.id === contestantId)) {
+    return res.status(400).json({ error: '无效的选手' });
+  }
+
+  const round = getVoteBucketKey();
+  const addOneVote = () => {
+    if (!state.manualVotes[round]) state.manualVotes[round] = {};
+    state.manualVotes[round][contestantId] = (state.manualVotes[round][contestantId] || 0) + 1;
+    saveState();
+    broadcastState();
+  };
+
+  if (activeDrips.has(contestantId)) {
+    const existing = activeDrips.get(contestantId);
+    existing.remaining += count;
+    return res.json({ ok: true, activeDrips: getDripStatus() });
+  }
+
+  // 立即加第1票，其余每秒加1票
+  addOneVote();
+  const leftAfterFirst = count - 1;
+  if (leftAfterFirst > 0) {
+    const entry = { remaining: leftAfterFirst, round, timer: null };
+    entry.timer = setInterval(() => {
+      addOneVote();
+      entry.remaining -= 1;
+      if (entry.remaining <= 0) {
+        clearInterval(entry.timer);
+        activeDrips.delete(contestantId);
+      }
+    }, 1000);
+    activeDrips.set(contestantId, entry);
+  }
+
+  res.json({ ok: true, activeDrips: getDripStatus() });
+});
+
+app.post('/api/admin/drip/stop', requireAdmin, (req, res) => {
+  stopAllDrips();
+  res.json({ ok: true, activeDrips: [] });
 });
 
 // 批量生成门票码
@@ -280,12 +529,18 @@ app.get('/api/admin/judges/qr', requireAdmin, async (req, res) => {
 // 重置当前轮次投票或清空所有门票
 app.post('/api/admin/reset', requireAdmin, (req, res) => {
   const { type } = req.body; // 'round' | 'tickets'
-  const round = String(state.settings.currentRound);
+  const bucketKeys = getRoundBucketKeys();
   if (type === 'round') {
+    stopAllDrips();
     Object.values(state.tickets).forEach(t => {
-      if (t.votedRounds) delete t.votedRounds[round];
+      if (t.votedRounds) {
+        bucketKeys.forEach(bk => delete t.votedRounds[bk]);
+      }
     });
-    delete state.judgeVotes[round];
+    bucketKeys.forEach(bk => {
+      delete state.judgeVotes[bk];
+      if (state.manualVotes) delete state.manualVotes[bk];
+    });
   } else if (type === 'tickets') {
     state.tickets = {};
   }
@@ -301,12 +556,14 @@ app.get('/api/ticket/:code', (req, res) => {
   if (!ticket) {
     return res.status(404).json({ error: '无效的门票二维码' });
   }
-  const round = String(state.settings.currentRound);
-  const votedIds = ticket.votedRounds?.[round] || null;
+  const bucketKey = getVoteBucketKey();
+  const votedIds = ticket.votedRounds?.[bucketKey] || null;
   res.json({
     valid: true,
     code,
     currentRound: state.settings.currentRound,
+    activeGroup: Number(state.settings.activeGroup) || 0,
+    voteBucket: bucketKey,
     hasVoted: Array.isArray(votedIds),
     votedIds
   });
@@ -324,9 +581,9 @@ app.post('/api/vote', (req, res) => {
   if (!ticket) {
     return res.status(404).json({ error: '无效的门票二维码' });
   }
-  const round = String(state.settings.currentRound);
-  if (ticket.votedRounds?.[round]) {
-    return res.status(400).json({ error: '您在本轮已投过票，无法重复提交' });
+  const bucketKey = getVoteBucketKey();
+  if (ticket.votedRounds?.[bucketKey]) {
+    return res.status(400).json({ error: '您在本组/本轮已投过票，无法重复提交' });
   }
   if (!Array.isArray(contestantIds) || contestantIds.length === 0) {
     return res.status(400).json({ error: '请至少选择一位选手' });
@@ -341,7 +598,7 @@ app.post('/api/vote', (req, res) => {
   }
 
   if (!ticket.votedRounds) ticket.votedRounds = {};
-  ticket.votedRounds[round] = uniqueIds;
+  ticket.votedRounds[bucketKey] = uniqueIds;
   saveState();
   broadcastState();
   res.json({ ok: true, votedIds: uniqueIds });
@@ -358,16 +615,16 @@ app.post('/api/judge/vote', (req, res) => {
   if (state.settings.votingStatus !== 'open') {
     return res.status(400).json({ error: '当前未开放投票' });
   }
-  const round = String(state.settings.currentRound);
-  if (!state.judgeVotes[round]) state.judgeVotes[round] = {};
-  if (state.judgeVotes[round][judgeCode]) {
-    return res.status(400).json({ error: '您在本轮已完成导师投票' });
+  const bucketKey = getVoteBucketKey();
+  if (!state.judgeVotes[bucketKey]) state.judgeVotes[bucketKey] = {};
+  if (state.judgeVotes[bucketKey][judgeCode]) {
+    return res.status(400).json({ error: '您在本组/本轮已完成导师投票' });
   }
   if (!Array.isArray(contestantIds) || contestantIds.length === 0) {
     return res.status(400).json({ error: '请至少选择一位选手' });
   }
   const uniqueIds = [...new Set(contestantIds.map(Number))];
-  state.judgeVotes[round][judgeCode] = uniqueIds;
+  state.judgeVotes[bucketKey][judgeCode] = uniqueIds;
   saveState();
   broadcastState();
   res.json({ ok: true, votedIds: uniqueIds });

@@ -2,128 +2,531 @@
 <html lang="zh-CN">
 <head>
   <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>十佳歌手大赛 · 实时大屏榜单</title>
   <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    body {
-      font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif;
-      background: radial-gradient(circle at top, #2e1065 0%, #090d16 70%);
-      color: #fff;
-      min-height: 100vh;
-      padding: 28px 48px;
-      overflow-x: hidden;
+    :root {
+      --sdu-crimson: #9B0D14;
+      --sdu-crimson-bright: #D91E2A;
+      --sdu-gold: #E6C27A;
+      --bg-obsidian: #0B0507;
+      --glass-border: rgba(255, 255, 255, 0.13);
+      --glass-highlight: rgba(255, 255, 255, 0.18);
     }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "PingFang SC", "Microsoft YaHei", sans-serif;
+      background-color: var(--bg-obsidian);
+      color: #FFF8F6;
+      min-height: 100vh;
+      padding: 24px 42px 26px;
+      overflow-x: hidden;
+      position: relative;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .stage-bg {
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+      pointer-events: none;
+      overflow: hidden;
+      background:
+        radial-gradient(ellipse 80% 55% at 50% -10%, rgba(155, 13, 20, 0.42) 0%, transparent 70%),
+        radial-gradient(circle at 15% 85%, rgba(200, 22, 29, 0.22) 0%, transparent 50%),
+        radial-gradient(circle at 88% 22%, rgba(230, 194, 122, 0.14) 0%, transparent 45%),
+        linear-gradient(180deg, #130508 0%, #090406 100%);
+    }
+
+    .stage-grid {
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+      pointer-events: none;
+      background-image:
+        linear-gradient(rgba(255, 255, 255, 0.025) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255, 255, 255, 0.025) 1px, transparent 1px);
+      background-size: 48px 48px;
+      mask-image: radial-gradient(ellipse 90% 80% at 50% 45%, #000 35%, transparent 100%);
+      -webkit-mask-image: radial-gradient(ellipse 90% 80% at 50% 45%, #000 35%, transparent 100%);
+    }
+
+    .orb {
+      position: absolute;
+      border-radius: 50%;
+      filter: blur(90px);
+      opacity: 0.55;
+      animation: drift 16s ease-in-out infinite alternate;
+    }
+    .orb-1 {
+      width: 520px; height: 520px;
+      background: radial-gradient(circle, rgba(185, 18, 28, 0.6), transparent 70%);
+      top: -160px; left: -100px;
+    }
+    .orb-2 {
+      width: 440px; height: 440px;
+      background: radial-gradient(circle, rgba(230, 194, 122, 0.28), transparent 70%);
+      bottom: -120px; right: -80px;
+      animation-delay: -7s;
+    }
+
+    @keyframes drift {
+      0% { transform: translate(0, 0) scale(1); }
+      100% { transform: translate(36px, 24px) scale(1.08); }
+    }
+
+    .shell {
+      position: relative;
+      z-index: 1;
+      max-width: 1480px;
+      width: 100%;
+      margin: 0 auto;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+    }
+
     .top {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      margin-bottom: 28px;
-      border-bottom: 1px solid rgba(255,255,255,0.12);
-      padding-bottom: 18px;
+      gap: 24px;
+      padding: 18px 28px;
+      margin-bottom: 20px;
+      background: linear-gradient(135deg, rgba(255, 255, 255, 0.08), rgba(155, 13, 20, 0.14));
+      backdrop-filter: blur(22px) saturate(150%);
+      -webkit-backdrop-filter: blur(22px) saturate(150%);
+      border: 1px solid var(--glass-border);
+      border-radius: 20px;
+      box-shadow:
+        inset 0 1px 0 var(--glass-highlight),
+        0 20px 50px rgba(0, 0, 0, 0.45),
+        0 0 40px rgba(155, 13, 20, 0.18);
     }
-    .top h1 { font-size: 36px; font-weight: 800; letter-spacing: 1px; }
-    .meta { display: flex; gap: 16px; align-items: center; }
-    .pill {
-      background: rgba(255,255,255,0.1);
-      padding: 8px 18px;
-      border-radius: 99px;
-      font-size: 16px;
-      color: #e2e8f0;
-    }
-    .pill.open { background: rgba(16, 185, 129, 0.25); color: #6ee7b7; border: 1px solid #10b981; }
-    .pill.paused { background: rgba(245, 158, 11, 0.25); color: #fde68a; border: 1px solid #f59e0b; }
-    .pill.ended { background: rgba(239, 68, 68, 0.25); color: #fca5a5; border: 1px solid #ef4444; }
 
-    .board { display: flex; flex-direction: column; gap: 14px; }
+    .brand { display: flex; align-items: center; gap: 20px; min-width: 0; }
+    .sdu-logo { height: 44px; width: auto; object-fit: contain; filter: drop-shadow(0 2px 10px rgba(255,255,255,0.12)); flex-shrink: 0; }
+    .divider { width: 1px; height: 36px; background: linear-gradient(180deg, transparent, rgba(230,194,122,0.55), transparent); flex-shrink: 0; }
+    .title-group { min-width: 0; }
+    .eyebrow { font-size: 11px; font-weight: 700; letter-spacing: 2.6px; text-transform: uppercase; color: var(--sdu-gold); margin-bottom: 4px; opacity: 0.92; }
+    .top h1 {
+      font-size: 27px; font-weight: 800; letter-spacing: 0.5px;
+      background: linear-gradient(90deg, #FFFFFF 0%, #FFE4DF 65%, #E6C27A 100%);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+
+    .meta { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; justify-content: flex-end; }
+    .pill {
+      background: rgba(255, 255, 255, 0.07);
+      backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      padding: 8px 16px; border-radius: 999px; font-size: 14px; font-weight: 600; color: #F1E8E6;
+      font-variant-numeric: tabular-nums;
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.12);
+    }
+    .pill.open {
+      background: rgba(16, 185, 129, 0.18); color: #6EE7B7; border-color: rgba(16, 185, 129, 0.55);
+      box-shadow: 0 0 22px rgba(16, 185, 129, 0.28), inset 0 1px 0 rgba(255, 255, 255, 0.18);
+      display: inline-flex; align-items: center; gap: 8px;
+    }
+    .pill.open::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: #34D399; box-shadow: 0 0 10px #34D399; animation: pulse 1.6s infinite; }
+    .pill.paused { background: rgba(245, 158, 11, 0.18); color: #FDE68A; border-color: rgba(245, 158, 11, 0.5); }
+    .pill.ended { background: rgba(225, 29, 72, 0.22); color: #FDA4AF; border-color: rgba(244, 63, 94, 0.5); }
+
+    @keyframes pulse { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.45; transform: scale(1.35); } }
+
+    .board { display: flex; flex-direction: column; gap: 11px; flex: 1; position: relative; }
+
     .row {
       display: grid;
-      grid-template-columns: 60px 220px 1fr 220px;
+      grid-template-columns: 78px 340px 1fr 250px;
       align-items: center;
-      gap: 20px;
-      background: rgba(255,255,255,0.05);
-      padding: 14px 22px;
-      border-radius: 14px;
-      border: 1px solid rgba(255,255,255,0.06);
+      gap: 18px;
+      background: linear-gradient(135deg, rgba(255, 255, 255, 0.065), rgba(255, 255, 255, 0.025));
+      backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
+      padding: 13px 22px;
+      border-radius: 16px;
+      border: 1px solid rgba(255, 255, 255, 0.09);
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.12), 0 8px 24px rgba(0, 0, 0, 0.28);
+      will-change: transform;
     }
-    .rank {
-      font-size: 24px;
-      font-weight: 800;
-      text-align: center;
-      color: #94a3b8;
-    }
-    .row:nth-child(1) .rank { color: #fbbf24; font-size: 30px; }
-    .row:nth-child(2) .rank { color: #e2e8f0; font-size: 28px; }
-    .row:nth-child(3) .rank { color: #d97706; font-size: 26px; }
 
-    .info .name { font-size: 20px; font-weight: 700; }
-    .info .song { font-size: 13px; color: #94a3b8; margin-top: 2px; }
+    .row.rank-1 {
+      background: linear-gradient(135deg, rgba(230, 194, 122, 0.16), rgba(155, 13, 20, 0.22));
+      border-color: rgba(230, 194, 122, 0.45);
+      box-shadow: inset 0 1px 0 rgba(255, 240, 200, 0.3), 0 10px 32px rgba(155, 13, 20, 0.3), 0 0 28px rgba(230, 194, 122, 0.16);
+    }
+    .row.rank-2 { background: linear-gradient(135deg, rgba(226, 232, 240, 0.11), rgba(155, 13, 20, 0.12)); border-color: rgba(226, 232, 240, 0.28); }
+    .row.rank-3 { background: linear-gradient(135deg, rgba(217, 119, 6, 0.12), rgba(155, 13, 20, 0.12)); border-color: rgba(217, 119, 6, 0.3); }
+
+    .rank {
+      width: 62px; height: 42px; margin: 0 auto; border-radius: 12px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 16px; font-weight: 800; font-variant-numeric: tabular-nums;
+      color: rgba(255, 240, 236, 0.78);
+      background: rgba(255, 255, 255, 0.06); border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    .row.rank-1 .rank { background: linear-gradient(135deg, #FCE3A6, #D4A145); color: #2A0A0D; border-color: rgba(255,255,255,0.6); box-shadow: 0 0 20px rgba(230,194,122,0.55); font-size: 18px; }
+    .row.rank-2 .rank { background: linear-gradient(135deg, #F8FAFC, #94A3B8); color: #0F172A; border-color: rgba(255,255,255,0.5); font-size: 17px; }
+    .row.rank-3 .rank { background: linear-gradient(135deg, #FDBA74, #B45309); color: #220C04; border-color: rgba(255,220,180,0.45); font-size: 17px; }
+
+    .info .name { font-size: 18.5px; font-weight: 700; color: #FFFFFF; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .song-inline { font-size: 14.5px; font-weight: 500; color: rgba(230, 194, 122, 0.88); margin-left: 4px; }
+    .num-tag {
+      display: inline-block; font-size: 12px; font-weight: 700; color: var(--sdu-gold);
+      background: rgba(155, 13, 20, 0.45); border: 1px solid rgba(230, 194, 122, 0.3);
+      padding: 2px 8px; border-radius: 6px; margin-right: 6px; vertical-align: 1px;
+    }
 
     .bar-wrap {
-      height: 28px;
-      background: rgba(255,255,255,0.08);
-      border-radius: 99px;
-      overflow: hidden;
+      height: 24px; background: rgba(0, 0, 0, 0.35); border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 999px; overflow: hidden; padding: 3px; box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.5);
     }
     .bar {
-      height: 100%;
-      background: linear-gradient(90deg, #8b5cf6, #ec4899);
-      border-radius: 99px;
-      transition: width 0.5s cubic-bezier(0.22, 1, 0.36, 1);
-      min-width: 4px;
+      height: 100%; background: linear-gradient(90deg, #9B0D14 0%, #E11D48 65%, #FB7185 100%);
+      border-radius: 999px; transition: width 0.55s cubic-bezier(0.22, 1, 0.36, 1);
+      box-shadow: 0 0 16px rgba(225, 29, 72, 0.55);
     }
-    .row:nth-child(1) .bar { background: linear-gradient(90deg, #f59e0b, #ef4444); }
+    .row.rank-1 .bar { background: linear-gradient(90deg, #B8111A 0%, #E6C27A 70%, #FFF1C2 100%); box-shadow: 0 0 22px rgba(230, 194, 122, 0.65); }
 
-    .score-box { text-align: right; }
-    .total { font-size: 26px; font-weight: 800; color: #f8fafc; }
-    .detail { font-size: 13px; color: #cbd5e1; margin-top: 2px; }
+    .score-box { text-align: right; font-variant-numeric: tabular-nums; }
+    .total { font-size: 24px; font-weight: 800; color: #FFFFFF; }
+    .row.rank-1 .total { color: #FDE68A; text-shadow: 0 0 20px rgba(230, 194, 122, 0.45); }
+    .detail { font-size: 12.5px; color: rgba(241, 226, 224, 0.72); margin-top: 2px; }
+
+    /* Two-page settlement views */
+    .section-banner {
+      display: flex; justify-content: space-between; align-items: center;
+      margin-bottom: 14px; padding: 12px 20px; border-radius: 14px;
+      background: rgba(155, 13, 20, 0.24); border: 1px solid rgba(230, 194, 122, 0.35);
+    }
+    .section-banner h2 { font-size: 20px; color: #FDE68A; }
+    .section-banner span { font-size: 14px; color: #F4E6E4; }
+
+    .group-badge-win {
+      display: inline-block; padding: 4px 12px; border-radius: 999px; font-size: 13px; font-weight: 700;
+      background: linear-gradient(90deg, #FCE3A6, #D4A145); color: #2A0A0D; margin-left: 10px;
+    }
+    .group-badge-duel {
+      display: inline-block; padding: 4px 12px; border-radius: 999px; font-size: 13px; font-weight: 600;
+      background: rgba(255,255,255,0.1); color: #cbd5e1; margin-left: 10px;
+    }
+
+    .duel-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+      flex: 1;
+    }
+    .duel-card {
+      background: linear-gradient(135deg, rgba(255, 255, 255, 0.065), rgba(255, 255, 255, 0.025));
+      backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: 18px;
+      padding: 16px;
+      display: flex; flex-direction: column; gap: 12px;
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.12), 0 10px 26px rgba(0, 0, 0, 0.32);
+    }
+    .duel-header {
+      display: flex; justify-content: space-between; align-items: center;
+      font-size: 14px; font-weight: 700; color: var(--sdu-gold);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1); padding-bottom: 8px;
+    }
+    .duel-fighter {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 14px; border-radius: 12px;
+      transition: all 0.3s;
+    }
+    .duel-fighter.winner {
+      background: linear-gradient(135deg, rgba(155, 13, 20, 0.45), rgba(230, 194, 122, 0.22));
+      border: 1.5px solid var(--sdu-gold);
+      box-shadow: 0 0 22px rgba(230, 194, 122, 0.26);
+    }
+    .duel-fighter.eliminated {
+      background: rgba(0, 0, 0, 0.28);
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      opacity: 0.42;
+      filter: grayscale(0.5);
+    }
+    .duel-tag-win {
+      background: linear-gradient(135deg, #FCE3A6, #D4A145); color: #2A0A0D;
+      font-size: 12px; font-weight: 800; padding: 3px 10px; border-radius: 999px;
+    }
+    .duel-tag-out {
+      background: rgba(255,255,255,0.1); color: #94a3b8;
+      font-size: 12px; font-weight: 600; padding: 3px 10px; border-radius: 999px;
+    }
+
+    .footer-brand {
+      margin-top: 18px; padding-top: 12px;
+      display: flex; justify-content: space-between; align-items: center;
+      font-size: 12px; letter-spacing: 1.4px; color: rgba(255, 240, 236, 0.45);
+      border-top: 1px solid rgba(255, 255, 255, 0.07);
+    }
+    .tech-support { display: inline-flex; align-items: center; gap: 6px; font-size: 11.5px; letter-spacing: 0.6px; color: rgba(255, 240, 236, 0.42); }
+    .tech-support img { height: 16px; width: auto; opacity: 0.8; vertical-align: middle; }
   </style>
 </head>
 <body>
-  <div class="top">
-    <h1 id="title">十佳歌手大赛 · 实时投票</h1>
-    <div class="meta">
-      <div class="pill" id="roundInfo">第 1 轮</div>
-      <div class="pill" id="statsInfo">已投 0 票</div>
-      <div class="pill" id="statusPill">加载中</div>
+  <div class="stage-bg">
+    <div class="orb orb-1"></div>
+    <div class="orb orb-2"></div>
+  </div>
+  <div class="stage-grid"></div>
+
+  <div class="shell">
+    <div class="top">
+      <div class="brand">
+        <img class="sdu-logo" src="/assets/sdu-logo-light.png" alt="Shandong University" />
+        <div class="divider"></div>
+        <div class="title-group">
+          <div class="eyebrow">SCHOOL OF SOFTWARE · LIVE RANKING</div>
+          <h1 id="title">十佳歌手大赛 · 实时投票</h1>
+        </div>
+      </div>
+      <div class="meta">
+        <div class="pill" id="roundInfo">第 1 轮</div>
+        <div class="pill" id="statsInfo">已投 0 票</div>
+        <div class="pill" id="statusPill">连接中</div>
+      </div>
+    </div>
+
+    <div id="stageContent" class="board"></div>
+
+    <div class="footer-brand">
+      <span>SHANDONG UNIVERSITY · SCHOOL OF SOFTWARE · 十佳歌手大赛实时计票系统</span>
+      <span class="tech-support">技术支持：<img src="/assets/dx-logo.png" alt="D.X. Studio" /></span>
     </div>
   </div>
 
-  <div id="board" class="board"></div>
-
   <script>
+    function formatOrdinal(n) {
+      const s = ['th', 'st', 'nd', 'rd'];
+      const v = n % 100;
+      return n + (s[(v - 20) % 10] || s[v] || s[0]);
+    }
+
+    function formatNameSong(c) {
+      const name = c.name || '待填写选手';
+      const song = c.song ? `<span class="song-inline">《${c.song}》</span>` : '';
+      return `${name}${song}`;
+    }
+
+    let currentViewMode = '';
+    const liveRowMap = new Map();
+
+    function renderLiveBoard(container, data) {
+      const { settings, leaderboard } = data;
+      const isTop10 = settings.mode === 'top10';
+      const roundNum = Number(settings.currentRound);
+      const sorted = [...leaderboard].sort((a, b) => b.totalScore - a.totalScore);
+      const maxScore = Math.max(...sorted.map(c => c.totalScore), 1);
+
+      if (currentViewMode !== 'live') {
+        container.className = 'board';
+        container.innerHTML = '';
+        liveRowMap.clear();
+        currentViewMode = 'live';
+      }
+
+      // First: 记录已有节点位置
+      const firstTops = new Map();
+      liveRowMap.forEach((el, id) => {
+        firstTops.set(id, el.getBoundingClientRect().top);
+      });
+
+      const validIds = new Set(sorted.map(c => c.id));
+      for (const [id, el] of liveRowMap.entries()) {
+        if (!validIds.has(id)) {
+          el.remove();
+          liveRowMap.delete(id);
+        }
+      }
+
+      sorted.forEach((c, idx) => {
+        const rankNum = idx + 1;
+        let row = liveRowMap.get(c.id);
+        if (!row) {
+          row = document.createElement('div');
+          row.className = 'row';
+          row.dataset.id = c.id;
+          row.innerHTML = `
+            <div class="rank"></div>
+            <div class="info"><div class="name"></div></div>
+            <div class="bar-wrap"><div class="bar"></div></div>
+            <div class="score-box"><div class="total"></div><div class="detail"></div></div>
+          `;
+          liveRowMap.set(c.id, row);
+        }
+
+        row.className = `row ${rankNum <= 3 ? 'rank-' + rankNum : ''}`;
+        row.querySelector('.rank').textContent = formatOrdinal(rankNum);
+
+        const groupBadge = isTop10 && roundNum === 1 && c.group ? `<span class="num-tag">第${c.group}组</span>` : '';
+        row.querySelector('.info .name').innerHTML = `<span class="num-tag">${c.number}号</span>${groupBadge}${formatNameSong(c)}`;
+
+        const pct = c.totalScore === 0 ? 0 : Math.max(4, Math.round((c.totalScore / maxScore) * 100));
+        row.querySelector('.bar').style.width = `${pct}%`;
+        row.querySelector('.total').textContent = `${c.totalScore} 分`;
+
+        const groupDetail = isTop10 && roundNum === 1 && c.groupTotal !== undefined ? ` · 组票 ${c.groupTotal}` : '';
+        row.querySelector('.detail').textContent = `观众 ${c.audienceVotes} 票 · 导师 ${c.judgeVotes} 票${groupDetail}`;
+
+        container.appendChild(row);
+      });
+
+      // Last + Invert + Play (FLIP 平滑名次移动动画)
+      sorted.forEach(c => {
+        const row = liveRowMap.get(c.id);
+        const firstTop = firstTops.get(c.id);
+        if (firstTop === undefined) return;
+        const lastTop = row.getBoundingClientRect().top;
+        const deltaY = firstTop - lastTop;
+        if (Math.abs(deltaY) > 1) {
+          row.style.transition = 'none';
+          row.style.transform = `translateY(${deltaY}px)`;
+          row.getBoundingClientRect(); // force reflow
+          row.style.transition = 'transform 0.65s cubic-bezier(0.22, 1, 0.36, 1)';
+          row.style.transform = 'translateY(0)';
+        }
+      });
+    }
+
+    function buildR1Groups(board) {
+      const groups = {};
+      board.forEach(c => {
+        const g = c.group || 1;
+        if (!groups[g]) groups[g] = [];
+        groups[g].push(c);
+      });
+      return Object.entries(groups).map(([g, members]) => ({
+        group: Number(g),
+        members: [...members].sort((a, b) => b.totalScore - a.totalScore),
+        total: members.reduce((s, m) => s + m.totalScore, 0)
+      })).sort((a, b) => b.total - a.total);
+    }
+
+    function renderR1GroupsView(container, data) {
+      currentViewMode = 'r1-groups';
+      liveRowMap.clear();
+      container.className = 'board';
+      const board = data.allRound1Leaderboard || data.leaderboard || [];
+      const groupList = buildR1Groups(board);
+      const maxTotal = Math.max(...groupList.map(g => g.total), 1);
+
+      container.innerHTML = `
+        <div class="section-banner">
+          <h2>🏆 第 1 轮 · 八组双人组合总票数榜（第一页）</h2>
+          <span>组合前 2 名（共 4 位选手）直接晋级十强</span>
+        </div>
+        ${groupList.map((g, idx) => {
+          const rankNum = idx + 1;
+          const isTop2 = idx < 2;
+          const pct = g.total === 0 ? 0 : Math.max(4, Math.round((g.total / maxTotal) * 100));
+          const names = g.members.map(m => `${m.number}号 ${m.name || '待定'}${m.song ? `《${m.song}》` : ''}`).join(' & ');
+          return `
+            <div class="row ${isTop2 ? 'rank-1' : ''}" style="${!isTop2 ? 'opacity:0.85;' : ''}">
+              <div class="rank">${formatOrdinal(rankNum)}</div>
+              <div class="info">
+                <div class="name">
+                  <span class="num-tag">第 ${g.group} 组</span>
+                  ${isTop2 ? '<span class="group-badge-win">✅ 组合直通晋级</span>' : '<span class="group-badge-duel">进入组内二选一</span>'}
+                </div>
+                <div class="song" style="margin-top:4px; color:rgba(255,240,236,0.78); font-size:13.5px;">${names}</div>
+              </div>
+              <div class="bar-wrap"><div class="bar" style="width:${pct}%"></div></div>
+              <div class="score-box">
+                <div class="total">${g.total} 分</div>
+                <div class="detail">${g.members.map(m => `${m.number}号:${m.totalScore}`).join(' + ')}</div>
+              </div>
+            </div>
+          `;
+        }).join('')}
+      `;
+    }
+
+    function renderR1DuelsView(container, data) {
+      currentViewMode = 'r1-duels';
+      liveRowMap.clear();
+      container.className = 'board';
+      const board = data.allRound1Leaderboard || data.leaderboard || [];
+      const groupList = buildR1Groups(board);
+      const remaining6 = groupList.slice(2);
+
+      container.innerHTML = `
+        <div class="section-banner">
+          <h2>⚔️ 第 1 轮 · 其余六组组内二选一结果（第二页）</h2>
+          <span>每组个人分更高者晋级十强（共 6 位晋级）</span>
+        </div>
+        <div class="duel-grid">
+          ${remaining6.map(g => {
+            const m1 = g.members[0];
+            const m2 = g.members[1];
+            return `
+              <div class="duel-card">
+                <div class="duel-header">
+                  <span>第 ${g.group} 组 · 组内二选一</span>
+                  <span>组票 ${g.total} 分</span>
+                </div>
+                ${[m1, m2].filter(Boolean).map((m, i) => {
+                  const isWin = i === 0;
+                  return `
+                    <div class="duel-fighter ${isWin ? 'winner' : 'eliminated'}">
+                      <div>
+                        <div style="font-size:16px; font-weight:700;">
+                          <span class="num-tag">${m.number}号</span>${formatNameSong(m)}
+                        </div>
+                        <div style="font-size:12px; color:rgba(255,240,236,0.72); margin-top:4px;">
+                          观众 ${m.audienceVotes} 票 · 导师 ${m.judgeVotes} 票
+                        </div>
+                      </div>
+                      <div style="text-align:right;">
+                        <div style="font-size:20px; font-weight:800; color:${isWin ? '#FDE68A' : '#cbd5e1'};">${m.totalScore} 分</div>
+                        <div style="margin-top:4px;">
+                          ${isWin ? '<span class="duel-tag-win">✅ 晋级</span>' : '<span class="duel-tag-out">未晋级</span>'}
+                        </div>
+                      </div>
+                    </div>
+                  `;
+                }).join('')}
+              </div>
+            `;
+          }).join('')}
+        </div>
+      `;
+    }
+
     function render(data) {
-      const { settings, leaderboard, stats } = data;
+      const { settings, stats } = data;
       document.getElementById('title').textContent = settings.title;
-      document.getElementById('roundInfo').textContent = `第 ${settings.currentRound} 轮 · 导师权重 ×${settings.judgeWeight}`;
-      document.getElementById('statsInfo').textContent = `观众已投 ${stats.totalAudienceVotes} 票 · 导师已投 ${stats.totalJudgeVotes}/${stats.totalJudges}`;
+
+      const isTop10 = settings.mode === 'top10';
+      const roundNum = Number(settings.currentRound);
+      const activeGroup = Number(settings.activeGroup) || 0;
+      let roundLabel = `第 ${roundNum} 轮`;
+      if (isTop10) {
+        if (roundNum === 1) {
+          roundLabel = activeGroup > 0 ? `第 1 轮 · 第 ${activeGroup} 组双人舞台` : '第 1 轮 · 16 进 10';
+        } else if (roundNum === 2) roundLabel = '第 2 轮 · 10 进 5';
+        else if (roundNum === 3) roundLabel = '第 3 轮 · 5 进 3 巅峰对决';
+      }
+      document.getElementById('roundInfo').textContent = `${roundLabel} · 导师权重 ×${settings.judgeWeight}`;
+      document.getElementById('statsInfo').textContent = `观众 ${stats.totalAudienceVotes} 票 · 导师 ${stats.totalJudgeVotes}/${stats.totalJudges} 票`;
 
       const statusPill = document.getElementById('statusPill');
       const map = { open: '投票进行中', paused: '投票已暂停', ended: '投票已结束' };
       statusPill.textContent = map[settings.votingStatus] || settings.votingStatus;
       statusPill.className = `pill ${settings.votingStatus}`;
 
-      const sorted = [...leaderboard].sort((a, b) => b.totalScore - a.totalScore);
-      const maxScore = Math.max(...sorted.map(c => c.totalScore), 1);
-
-      document.getElementById('board').innerHTML = sorted.map((c, idx) => {
-        const pct = Math.round((c.totalScore / maxScore) * 100);
-        return `
-          <div class="row">
-            <div class="rank">${idx + 1}</div>
-            <div class="info">
-              <div class="name">${c.number}号 ${c.name}</div>
-              <div class="song">${c.song || ''}</div>
-            </div>
-            <div class="bar-wrap">
-              <div class="bar" style="width: ${c.totalScore === 0 ? 0 : pct}%"></div>
-            </div>
-            <div class="score-box">
-              <div class="total">${c.totalScore} 分</div>
-              <div class="detail">观众 ${c.audienceVotes} 票 · 导师 ${c.judgeVotes} 票</div>
-            </div>
-          </div>
-        `;
-      }).join('');
+      const container = document.getElementById('stageContent');
+      const view = isTop10 && roundNum === 1 ? (settings.screenView || 'live') : 'live';
+      if (view === 'r1-groups') renderR1GroupsView(container, data);
+      else if (view === 'r1-duels') renderR1DuelsView(container, data);
+      else renderLiveBoard(container, data);
     }
 
     function connectWS() {

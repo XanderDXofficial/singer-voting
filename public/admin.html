@@ -12,7 +12,7 @@
       color: #0f172a;
       padding: 24px;
     }
-    .container { max-width: 980px; margin: 0 auto; }
+    .container { max-width: 1040px; margin: 0 auto; }
     .card {
       background: #fff;
       border-radius: 12px;
@@ -21,7 +21,7 @@
       box-shadow: 0 1px 3px rgba(0,0,0,0.08);
     }
     h1 { font-size: 24px; margin-bottom: 16px; }
-    h2 { font-size: 18px; margin-bottom: 14px; border-left: 4px solid #6366f1; padding-left: 10px; }
+    h2 { font-size: 18px; margin-bottom: 14px; border-left: 4px solid #9B0D14; padding-left: 10px; }
     .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 14px; }
     label { display: block; font-size: 13px; color: #475569; margin-bottom: 6px; font-weight: 600; }
     input, select {
@@ -30,9 +30,10 @@
       border: 1px solid #cbd5e1;
       border-radius: 8px;
       font-size: 14px;
+      background: #fff;
     }
     .btn {
-      padding: 10px 18px;
+      padding: 10px 16px;
       border: none;
       border-radius: 8px;
       font-size: 14px;
@@ -42,14 +43,90 @@
       color: #fff;
     }
     .btn:hover { opacity: 0.9; }
+    .btn-crimson { background: #9B0D14; }
     .btn-green { background: #10b981; }
     .btn-amber { background: #f59e0b; }
     .btn-red { background: #ef4444; }
     .btn-gray { background: #64748b; }
-    .row-actions { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 12px; }
+    .btn-outline { background: #fff; color: #334155; border: 1px solid #cbd5e1; }
+    .row-actions { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 12px; align-items: center; }
+
+    .mode-bar {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      background: linear-gradient(135deg, #fff5f5, #fff);
+      border: 1px solid #fecaca;
+    }
+    .mode-tabs { display: flex; gap: 8px; flex-wrap: wrap; }
+    .mode-tab {
+      padding: 10px 18px;
+      border-radius: 8px;
+      border: 1.5px solid #cbd5e1;
+      background: #fff;
+      color: #475569;
+      font-weight: 700;
+      cursor: pointer;
+    }
+    .mode-tab.active {
+      background: #9B0D14;
+      color: #fff;
+      border-color: #9B0D14;
+    }
+
     table { width: 100%; border-collapse: collapse; margin-top: 10px; }
     th, td { padding: 10px; border-bottom: 1px solid #e2e8f0; text-align: left; font-size: 14px; }
     th { background: #f8fafc; color: #475569; }
+
+    .group-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(225px, 1fr));
+      gap: 12px;
+      margin-top: 12px;
+    }
+    .group-box {
+      border: 1.5px solid #e2e8f0;
+      border-radius: 10px;
+      padding: 12px;
+      background: #f8fafc;
+    }
+    .group-box.top2 {
+      border-color: #f59e0b;
+      background: #fffbeb;
+    }
+    .group-title {
+      font-weight: 700;
+      font-size: 14px;
+      margin-bottom: 8px;
+      display: flex;
+      justify-content: space-between;
+    }
+    .member-check {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 6px 8px;
+      background: #fff;
+      border-radius: 6px;
+      margin-bottom: 6px;
+      font-size: 13px;
+      border: 1px solid #e2e8f0;
+    }
+    .member-check label {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin: 0;
+      font-weight: 600;
+      color: #0f172a;
+      cursor: pointer;
+    }
+    .member-check input[type="checkbox"] {
+      width: auto;
+    }
+
     .qr-grid {
       display: grid;
       grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
@@ -81,14 +158,39 @@
       <label>管理员密码（默认：admin）</label>
       <input id="loginPwd" type="password" placeholder="请输入密码" />
       <div class="row-actions">
-        <button class="btn" style="width:100%" onclick="login()">登录</button>
+        <button class="btn btn-crimson" style="width:100%" onclick="login()">登录</button>
       </div>
     </div>
 
     <!-- 主界面 -->
     <div id="mainBox" style="display:none;">
       <div class="no-print">
-        <h1>🎤 十佳歌手大赛 · 图形化管理后台</h1>
+        <h1>🎤 软件学院十佳歌手大赛 · 图形化管理后台</h1>
+
+        <!-- 模式切换栏 -->
+        <div class="card mode-bar">
+          <div>
+            <div style="font-weight:700; font-size:15px;">运行模式选择</div>
+            <div style="font-size:12.5px; color:#64748b; margin-top:2px;">应急通用用“经典模式”；按 16进10 → 10进5 → 5进3 赛制请选“十佳定制模式”</div>
+          </div>
+          <div class="mode-tabs">
+            <button id="tabClassic" class="mode-tab" onclick="switchMode('classic')">经典模式（通用应急）</button>
+            <button id="tabTop10" class="mode-tab" onclick="switchMode('top10')">十佳定制模式（16→10→5→3）</button>
+          </div>
+        </div>
+
+        <!-- 项目存档系统 -->
+        <div class="card">
+          <h2>0. 项目存档系统（本地保存与一键恢复）</h2>
+          <p style="font-size:13px; color:#475569; margin-bottom:10px;">
+            编辑好选手、规则和票码后可导出 <code>.json</code> 存档文件；下次重新启动或更换设备时上传即可原样恢复全部数据。
+          </p>
+          <div class="row-actions">
+            <button class="btn btn-crimson" onclick="exportArchive()">💾 保存/导出项目存档 (.json)</button>
+            <input id="archiveFile" type="file" accept=".json" style="max-width:260px; padding:7px;" />
+            <button class="btn btn-green" onclick="importArchive()">📂 上传并恢复项目存档</button>
+          </div>
+        </div>
 
         <!-- 快捷状态控制 -->
         <div class="card">
@@ -98,9 +200,19 @@
             <button class="btn btn-green" onclick="setStatus('open')">▶ 立即开启投票</button>
             <button class="btn btn-amber" onclick="setStatus('paused')">⏸ 暂停投票</button>
             <button class="btn btn-red" onclick="setStatus('ended')">⏹ 结束本轮投票</button>
-            <a href="/screen.html" target="_blank"><button class="btn btn-gray">📺 打开大屏幕榜单</button></a>
-            <a href="/judge.html" target="_blank"><button class="btn btn-gray">🎓 打开导师投票页</button></a>
+            <a href="/screen.html" target="_blank"><button class="btn btn-gray" type="button">📺 打开大屏幕榜单</button></a>
+            <a href="/judge.html" target="_blank"><button class="btn btn-gray" type="button">🎓 打开导师投票页</button></a>
           </div>
+        </div>
+
+        <!-- 十佳定制模式专属控制面板 -->
+        <div id="top10Panel" class="card" style="display:none; border: 2px solid #9B0D14;">
+          <h2>★ 十佳定制赛制控制台（16进10 → 10进5 → 5进3）</h2>
+          <div class="row-actions" style="margin-top:0; margin-bottom:14px;">
+            <button class="btn btn-crimson" onclick="initTop10Contestants()">🎬 初始化 16 位空选手（8 组两人配对）</button>
+            <button class="btn btn-outline" onclick="loadDashboard()">🔄 刷新当前算分结果</button>
+          </div>
+          <div id="top10StageBody"></div>
         </div>
 
         <!-- 规则与定时设置 -->
@@ -148,16 +260,25 @@
 
         <!-- 选手管理 -->
         <div class="card">
-          <h2>3. 选手管理</h2>
+          <h2>3. 选手管理（支持留空后现场填写）</h2>
           <table>
             <thead>
-              <tr><th>编号</th><th>姓名</th><th>参赛曲目</th><th>观众票</th><th>导师票</th><th>总分</th><th>操作</th></tr>
+              <tr>
+                <th>编号</th>
+                <th id="thGroup" style="display:none;">组别 (1-8)</th>
+                <th>歌手姓名</th>
+                <th>参赛曲目</th>
+                <th>观众票</th>
+                <th>导师票</th>
+                <th>总分</th>
+                <th>操作</th>
+              </tr>
             </thead>
             <tbody id="contestantTbody"></tbody>
           </table>
           <div class="row-actions">
             <button class="btn btn-gray" onclick="addContestantRow()">➕ 添加一位选手</button>
-            <button class="btn" onclick="saveContestants()">💾 保存选手列表</button>
+            <button class="btn btn-crimson" onclick="saveContestants()">💾 保存选手列表</button>
           </div>
         </div>
 
@@ -170,7 +291,7 @@
               <input id="ticketCount" type="number" value="300" min="1" max="2000" />
             </div>
             <div>
-              <label>二维码网址前缀（默认当前网址，内网穿透时填公网域名）</label>
+              <label>二维码网址前缀（默认当前网址，公网部署填 Render 域名）</label>
               <input id="baseUrlInput" type="text" />
             </div>
           </div>
@@ -179,6 +300,26 @@
             <button class="btn btn-green" onclick="exportQRCodes()">🖨 加载并打印观众门票二维码</button>
             <button class="btn btn-amber" onclick="exportJudgeQRCodes()">🎓 生成导师专属二维码</button>
             <button class="btn btn-red" onclick="resetData('tickets')">🗑 清空所有门票码</button>
+          </div>
+        </div>
+
+        <!-- 人工微调（1张/秒加票） -->
+        <div class="card" style="border: 1px dashed #94a3b8;">
+          <h2>5. 票数微调（1 张/秒平滑加票）</h2>
+          <div class="grid">
+            <div>
+              <label>选择选手</label>
+              <select id="dripContestant"></select>
+            </div>
+            <div>
+              <label>增加票数（张）</label>
+              <input id="dripCount" type="number" value="10" min="1" max="500" />
+            </div>
+          </div>
+          <div class="row-actions">
+            <button class="btn btn-crimson" onclick="startDrip()">⚡ 开始加票（1 张/秒）</button>
+            <button class="btn btn-gray" onclick="stopDrip()">⏹ 停止全部加票</button>
+            <span id="dripStatus" style="font-size:13px; color:#64748b;"></span>
           </div>
         </div>
       </div>
@@ -196,7 +337,9 @@
 
   <script>
     let token = localStorage.getItem('admin_token') || '';
-    let contestants = [];
+    let allContestants = [];
+    let currentSettings = {};
+    let currentPublicState = {};
 
     document.getElementById('baseUrlInput').value = location.origin;
 
@@ -232,12 +375,32 @@
       document.getElementById('loginBox').style.display = 'none';
       document.getElementById('mainBox').style.display = 'block';
       const data = await api('/api/admin/config');
-      const { settings, publicState } = data;
+      const { settings, publicState, activeDrips } = data;
+      currentSettings = settings;
+      currentPublicState = publicState;
       const { stats, leaderboard } = publicState;
 
+      // 合并当前得分到 allContestants
+      const fullBoard = publicState.allRound1Leaderboard || leaderboard;
+      const scoreMap = new Map(fullBoard.map(c => [c.id, c]));
+      allContestants = (data.allContestants || fullBoard).map(c => ({
+        ...c,
+        audienceVotes: scoreMap.get(c.id)?.audienceVotes ?? 0,
+        judgeVotes: scoreMap.get(c.id)?.judgeVotes ?? 0,
+        totalScore: scoreMap.get(c.id)?.totalScore ?? 0,
+        groupTotal: scoreMap.get(c.id)?.groupTotal ?? 0
+      }));
+
+      const mode = settings.mode || 'classic';
+      document.getElementById('tabClassic').className = `mode-tab ${mode === 'classic' ? 'active' : ''}`;
+      document.getElementById('tabTop10').className = `mode-tab ${mode === 'top10' ? 'active' : ''}`;
+      document.getElementById('top10Panel').style.display = mode === 'top10' ? 'block' : 'none';
+      document.getElementById('thGroup').style.display = mode === 'top10' ? '' : 'none';
+
       const statusMap = { open: '🟢 投票进行中', paused: '🟡 已暂停', ended: '🔴 已结束' };
+      const modeText = mode === 'top10' ? '十佳定制模式' : '经典模式';
       document.getElementById('statusSummary').textContent =
-        `当前状态：${statusMap[settings.votingStatus]} ｜ 第 ${settings.currentRound} 轮 ｜ 已生成门票 ${stats.totalTickets} 张 ｜ 本轮观众已投 ${stats.totalAudienceVotes} 票 ｜ 导师已投 ${stats.totalJudgeVotes}/${stats.totalJudges}`;
+        `模式：${modeText} ｜ 状态：${statusMap[settings.votingStatus]} ｜ 第 ${settings.currentRound} 轮 ｜ 门票 ${stats.totalTickets} 张 ｜ 本轮观众 ${stats.totalAudienceVotes} 票 ｜ 导师 ${stats.totalJudgeVotes}/${stats.totalJudges}`;
 
       document.getElementById('cfgTitle').value = settings.title;
       document.getElementById('cfgRound').value = settings.currentRound;
@@ -248,16 +411,176 @@
       document.getElementById('cfgJudgeCodes').value = (settings.judgeCodes || []).join(',');
       document.getElementById('cfgAdminPwd').value = settings.adminPassword;
 
-      contestants = leaderboard;
       renderContestants();
+      renderDripSelect(activeDrips || []);
+      if (mode === 'top10') renderTop10Panel();
+    }
+
+    async function switchMode(mode) {
+      const payload = { mode };
+      if (mode === 'classic') {
+        payload.activeContestantIds = [];
+        payload.activeGroup = 0;
+        payload.screenView = 'live';
+      }
+      await api('/api/admin/settings', 'POST', payload);
+      loadDashboard();
+    }
+
+    async function setActiveGroup(groupNum) {
+      await api('/api/admin/settings', 'POST', {
+        activeGroup: groupNum,
+        screenView: 'live',
+        votingStatus: groupNum > 0 ? 'open' : currentSettings.votingStatus
+      });
+      loadDashboard();
+    }
+
+    async function setScreenView(screenView) {
+      await api('/api/admin/settings', 'POST', { screenView });
+      loadDashboard();
+    }
+
+    async function initTop10Contestants() {
+      if (!confirm('将生成 16 位空白选手（分成 8 组，每组 2 人）并设为第 1 轮，确定吗？')) return;
+      await api('/api/admin/top10/init-16', 'POST');
+      loadDashboard();
+    }
+
+    function renderTop10Panel() {
+      const round = Number(currentSettings.currentRound);
+      const board = currentPublicState.allRound1Leaderboard || currentPublicState.leaderboard || [];
+      const el = document.getElementById('top10StageBody');
+      const activeGroup = Number(currentSettings.activeGroup) || 0;
+      const screenView = currentSettings.screenView || 'live';
+
+      if (round === 1) {
+        // 按组分组
+        const groups = {};
+        board.forEach(c => {
+          const g = c.group || 1;
+          if (!groups[g]) groups[g] = [];
+          groups[g].push(c);
+        });
+        const groupList = Object.entries(groups).map(([g, members]) => {
+          const total = members.reduce((s, m) => s + m.totalScore, 0);
+          return { group: Number(g), members, total };
+        }).sort((a, b) => b.total - a.total);
+
+        const top2Groups = new Set(groupList.slice(0, 2).map(g => g.group));
+        const defaultQualified = new Set();
+        groupList.forEach(g => {
+          if (top2Groups.has(g.group)) {
+            g.members.forEach(m => defaultQualified.add(m.id));
+          } else if (g.members.length > 0) {
+            const best = [...g.members].sort((a, b) => b.totalScore - a.totalScore)[0];
+            defaultQualified.add(best.id);
+          }
+        });
+
+        el.innerHTML = `
+          <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:10px; padding:12px; margin-bottom:14px;">
+            <div style="font-weight:700; font-size:13.5px; margin-bottom:8px;">🎤 双人舞台逐组开票（唱完一组点一下对应组，观众即可立投该组）：</div>
+            <div class="row-actions" style="margin-top:0;">
+              ${[1,2,3,4,5,6,7,8].map(g => `
+                <button class="btn ${activeGroup === g ? 'btn-crimson' : 'btn-outline'}" style="padding:7px 12px;" onclick="setActiveGroup(${g})">第 ${g} 组${activeGroup === g ? ' ●投票中' : ''}</button>
+              `).join('')}
+              <button class="btn ${activeGroup === 0 ? 'btn-crimson' : 'btn-outline'}" style="padding:7px 12px;" onclick="setActiveGroup(0)">全部 16 人</button>
+            </div>
+          </div>
+
+          <div style="background:#fffbeb; border:1px solid #fde68a; border-radius:10px; padding:12px; margin-bottom:14px;">
+            <div style="font-weight:700; font-size:13.5px; margin-bottom:8px;">📺 全部唱完后 · 大屏结果两页展示切换：</div>
+            <div class="row-actions" style="margin-top:0;">
+              <button class="btn ${screenView === 'live' ? 'btn-crimson' : 'btn-outline'}" onclick="setScreenView('live')">📊 实时排行视图</button>
+              <button class="btn ${screenView === 'r1-groups' ? 'btn-crimson' : 'btn-outline'}" onclick="setScreenView('r1-groups')">🏆 大屏第一页：8 组组合票数榜</button>
+              <button class="btn ${screenView === 'r1-duels' ? 'btn-crimson' : 'btn-outline'}" onclick="setScreenView('r1-duels')">⚔️ 大屏第二页：后 6 组二选一晋级结果</button>
+            </div>
+          </div>
+
+          <p style="font-size:13.5px; color:#334155;">
+            <strong>第 1 轮（16进10）结算预览</strong>：组票前 2 名（金色框）4人全员晋级，其余 6 组各取组内分最高 1 人（共 10 人）。可手动调整勾选：
+          </p>
+          <div class="group-grid">
+            ${groupList.map((g, idx) => `
+              <div class="group-box ${top2Groups.has(g.group) ? 'top2' : ''}">
+                <div class="group-title">
+                  <span>第 ${g.group} 组 ${top2Groups.has(g.group) ? '🏆组票前二' : ''}</span>
+                  <span>组票 ${g.total} 分</span>
+                </div>
+                ${g.members.map(m => `
+                  <div class="member-check">
+                    <label>
+                      <input type="checkbox" class="qualify-cb" value="${m.id}" ${defaultQualified.has(m.id) ? 'checked' : ''} />
+                      <span>${m.number}号 ${m.name || '(未命名)'}</span>
+                    </label>
+                    <span>${m.totalScore} 分</span>
+                  </div>
+                `).join('')}
+              </div>
+            `).join('')}
+          </div>
+          <div class="row-actions">
+            <button class="btn btn-green" onclick="advanceTop10(2)">✅ 确认勾选的选手晋级第 2 轮（10进5）</button>
+          </div>
+        `;
+      } else if (round === 2) {
+        const sorted = [...board].sort((a, b) => b.totalScore - a.totalScore);
+        const top5Ids = new Set(sorted.slice(0, 5).map(c => c.id));
+        el.innerHTML = `
+          <p style="font-size:13.5px; color:#334155; margin-bottom:10px;">
+            <strong>第 2 轮（10进5）结算预览</strong>：当前排名前 5 位已默认勾选，确认后进入第 3 轮（5进3）：
+          </p>
+          <div class="group-grid">
+            ${sorted.map((m, i) => `
+              <div class="member-check">
+                <label>
+                  <input type="checkbox" class="qualify-cb" value="${m.id}" ${top5Ids.has(m.id) ? 'checked' : ''} />
+                  <span>#${i + 1} · ${m.number}号 ${m.name || '(未命名)'}</span>
+                </label>
+                <span><strong>${m.totalScore} 分</strong></span>
+              </div>
+            `).join('')}
+          </div>
+          <div class="row-actions">
+            <button class="btn btn-green" onclick="advanceTop10(3)">✅ 确认勾选的选手晋级第 3 轮（5进3）</button>
+          </div>
+        `;
+      } else {
+        const sorted = [...board].sort((a, b) => b.totalScore - a.totalScore);
+        const labels = ['🥇 冠军', '🥈 亚军', '🥉 季军'];
+        el.innerHTML = `
+          <p style="font-size:14px; color:#334155; margin-bottom:10px;"><strong>第 3 轮（5进3 决赛）当前实时前三名：</strong></p>
+          <div class="group-grid">
+            ${sorted.slice(0, 3).map((m, i) => `
+              <div class="group-box top2">
+                <div class="group-title"><span>${labels[i]}</span><span>${m.totalScore} 分</span></div>
+                <div style="font-weight:700;">${m.number}号 ${m.name || '(未命名)'}</div>
+                <div style="font-size:12.5px; color:#64748b;">${m.song || ''}</div>
+              </div>
+            `).join('')}
+          </div>
+        `;
+      }
+    }
+
+    async function advanceTop10(nextRound) {
+      const checked = Array.from(document.querySelectorAll('.qualify-cb:checked')).map(el => Number(el.value));
+      if (checked.length === 0) return alert('请至少勾选一位晋级选手');
+      if (!confirm(`已选 ${checked.length} 位选手进入第 ${nextRound} 轮（本轮将暂停投票等待开启），确认吗？`)) return;
+      const res = await api('/api/admin/top10/advance', 'POST', { nextRound, qualifiedIds: checked });
+      if (res.error) return alert(res.error);
+      loadDashboard();
     }
 
     function renderContestants() {
-      document.getElementById('contestantTbody').innerHTML = contestants.map((c, idx) => `
+      const showGroup = (currentSettings.mode || 'classic') === 'top10';
+      document.getElementById('contestantTbody').innerHTML = allContestants.map((c, idx) => `
         <tr>
-          <td><input style="width:60px" value="${c.number}" onchange="contestants[${idx}].number=this.value" /></td>
-          <td><input value="${c.name}" onchange="contestants[${idx}].name=this.value" /></td>
-          <td><input value="${c.song || ''}" onchange="contestants[${idx}].song=this.value" /></td>
+          <td><input style="width:60px" value="${c.number}" onchange="allContestants[${idx}].number=this.value" /></td>
+          ${showGroup ? `<td><input type="number" min="1" max="16" style="width:65px" value="${c.group || Math.floor(idx / 2) + 1}" onchange="allContestants[${idx}].group=Number(this.value)" /></td>` : ''}
+          <td><input value="${c.name || ''}" placeholder="待填写姓名" onchange="allContestants[${idx}].name=this.value" /></td>
+          <td><input value="${c.song || ''}" placeholder="待填写曲目" onchange="allContestants[${idx}].song=this.value" /></td>
           <td>${c.audienceVotes}</td>
           <td>${c.judgeVotes}</td>
           <td><strong>${c.totalScore}</strong></td>
@@ -267,18 +590,27 @@
     }
 
     function addContestantRow() {
-      const nextNum = String(contestants.length + 1).padStart(2, '0');
-      contestants.push({ id: Date.now(), number: nextNum, name: `新选手 ${nextNum}`, song: '', audienceVotes: 0, judgeVotes: 0, totalScore: 0 });
+      const nextNum = String(allContestants.length + 1).padStart(2, '0');
+      allContestants.push({
+        id: Date.now(),
+        number: nextNum,
+        name: '',
+        song: '',
+        group: Math.floor(allContestants.length / 2) + 1,
+        audienceVotes: 0,
+        judgeVotes: 0,
+        totalScore: 0
+      });
       renderContestants();
     }
 
     function removeContestant(idx) {
-      contestants.splice(idx, 1);
+      allContestants.splice(idx, 1);
       renderContestants();
     }
 
     async function saveContestants() {
-      await api('/api/admin/contestants', 'POST', { contestants });
+      await api('/api/admin/contestants', 'POST', { contestants: allContestants });
       alert('选手列表已保存！');
       loadDashboard();
     }
@@ -301,6 +633,63 @@
       });
       alert('设置已保存！');
       loadDashboard();
+    }
+
+    async function exportArchive() {
+      const data = await api('/api/admin/archive/export');
+      const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      const ts = new Date().toISOString().slice(0, 16).replace(/[:T]/g, '-');
+      a.href = url;
+      a.download = `singer-voting-archive-${ts}.json`;
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+
+    async function importArchive() {
+      const fileInput = document.getElementById('archiveFile');
+      const file = fileInput.files[0];
+      if (!file) return alert('请先选择一个 .json 存档文件');
+      try {
+        const text = await file.text();
+        const parsed = JSON.parse(text);
+        const res = await api('/api/admin/archive/import', 'POST', parsed);
+        if (res.error) return alert(res.error);
+        alert('项目存档已成功恢复！');
+        loadDashboard();
+      } catch (e) {
+        alert('存档文件读取失败，请确认文件格式正确');
+      }
+    }
+
+    function renderDripSelect(activeDrips) {
+      const list = currentPublicState.leaderboard || allContestants;
+      const sel = document.getElementById('dripContestant');
+      const prevVal = sel.value;
+      sel.innerHTML = list.map(c => `<option value="${c.id}">${c.number}号 ${c.name || '(未命名)'}（当前 ${c.totalScore} 分）</option>`).join('');
+      if (prevVal) sel.value = prevVal;
+
+      const statusEl = document.getElementById('dripStatus');
+      if (activeDrips.length > 0) {
+        statusEl.textContent = `正在加票中（剩余 ${activeDrips.reduce((s, d) => s + d.remaining, 0)} 票）...`;
+      } else {
+        statusEl.textContent = '';
+      }
+    }
+
+    async function startDrip() {
+      const contestantId = Number(document.getElementById('dripContestant').value);
+      const count = Number(document.getElementById('dripCount').value) || 1;
+      if (!contestantId) return alert('请选择选手');
+      const res = await api('/api/admin/drip/start', 'POST', { contestantId, count });
+      if (res.error) return alert(res.error);
+      document.getElementById('dripStatus').textContent = `已启动：正在以 1 张/秒的速度增加 ${count} 票`;
+    }
+
+    async function stopDrip() {
+      await api('/api/admin/drip/stop', 'POST');
+      document.getElementById('dripStatus').textContent = '已停止加票';
     }
 
     async function generateTickets() {
