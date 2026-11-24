@@ -287,7 +287,7 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      transition: opacity 0.45s ease;
+      transition: opacity 0.38s ease;
     }
 
     #introSplash.hide { opacity: 0; pointer-events: none; }
@@ -308,7 +308,7 @@
       letter-spacing: 4px;
       color: rgba(255, 255, 255, 0.92);
       opacity: 0;
-      animation: splashTextSeq 2.2s ease both;
+      animation: splashTextSeq 1.3s ease both;
     }
 
     .splash-logo {
@@ -317,7 +317,7 @@
       max-width: 62vw;
       height: auto;
       opacity: 0;
-      animation: splashLogoSeq 2.7s ease 2.25s both;
+      animation: splashLogoSeq 1.6s ease 1.35s both;
     }
 
     @keyframes splashTextSeq {
@@ -389,12 +389,20 @@
       width: 100%;
       padding: 12px;
       border-radius: 12px;
-      border: 1px solid rgba(255, 240, 200, 0.5);
-      background: linear-gradient(90deg, #B88428 0%, #E6C27A 55%, #D99B38 100%);
-      color: #24090B;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      background: linear-gradient(180deg, #A81018 0%, #860B11 100%);
+      color: #FFFFFF;
       font-size: 15.5px;
       font-weight: 800;
+      letter-spacing: 1px;
       cursor: pointer;
+      box-shadow: 0 6px 20px rgba(155, 13, 20, 0.42), inset 0 1px 0 rgba(255, 255, 255, 0.2);
+    }
+
+    .song {
+      font-size: 13px;
+      color: rgba(230, 194, 122, 0.88);
+      margin-top: 3px;
     }
 
     .footer {
@@ -554,13 +562,14 @@
       document.getElementById('weightBadge').textContent = `第 ${settings.currentRound} 轮 · ${groupPrefix}${statusText} · 导师 1 票 = ${settings.judgeWeight} 观众票`;
 
       document.getElementById('list').innerHTML = leaderboard.map(c => {
-        const songHtml = c.song ? ` <span style="color:#E6C27A; font-weight:500; font-size:14px;">《${c.song}》</span>` : '';
+        const songText = c.song ? `《${c.song}》` : '';
         return `
           <div class="card ${selectedIds.has(c.id) ? 'selected' : ''}" onclick="toggle(${c.id})">
             <div class="card-left">
               <div class="num">${c.number}</div>
               <div>
-                <div class="name">${c.name || '待填写选手'}${songHtml}</div>
+                <div class="name">${c.number}号 ${c.name || '待填写选手'}</div>
+                ${songText ? `<div class="song">${songText}</div>` : ''}
               </div>
             </div>
             <div class="status-tag">${selectedIds.has(c.id) ? '★ 已选' : '选择'}</div>
@@ -631,11 +640,11 @@
           splash.remove();
           splashFinished = true;
           maybeShowWelcomePopup();
-        }, 460);
+        }, 380);
       }
 
       skipBtn.addEventListener('click', dismissSplash);
-      setTimeout(dismissSplash, 5000);
+      setTimeout(dismissSplash, 3000);
     })();
 
     init();

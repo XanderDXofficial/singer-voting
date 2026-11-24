@@ -21,11 +21,18 @@
       background-color: var(--bg-obsidian);
       color: #FFF8F6;
       min-height: 100vh;
-      padding: 24px 42px 26px;
+      padding: 18px 34px 18px;
       overflow-x: hidden;
       position: relative;
       display: flex;
       flex-direction: column;
+    }
+
+    @media (min-width: 1024px) {
+      body {
+        height: 100vh;
+        overflow: hidden;
+      }
     }
 
     .stage-bg {
@@ -81,10 +88,11 @@
     .shell {
       position: relative;
       z-index: 1;
-      max-width: 1480px;
+      max-width: 1520px;
       width: 100%;
       margin: 0 auto;
       flex: 1;
+      min-height: 0;
       display: flex;
       flex-direction: column;
     }
@@ -93,38 +101,39 @@
       display: flex;
       justify-content: space-between;
       align-items: center;
-      gap: 24px;
-      padding: 18px 28px;
-      margin-bottom: 20px;
+      gap: 20px;
+      padding: 14px 24px;
+      margin-bottom: 14px;
       background: linear-gradient(135deg, rgba(255, 255, 255, 0.08), rgba(155, 13, 20, 0.14));
       backdrop-filter: blur(22px) saturate(150%);
       -webkit-backdrop-filter: blur(22px) saturate(150%);
       border: 1px solid var(--glass-border);
-      border-radius: 20px;
+      border-radius: 18px;
       box-shadow:
         inset 0 1px 0 var(--glass-highlight),
         0 20px 50px rgba(0, 0, 0, 0.45),
         0 0 40px rgba(155, 13, 20, 0.18);
+      flex-shrink: 0;
     }
 
-    .brand { display: flex; align-items: center; gap: 20px; min-width: 0; }
-    .sdu-logo { height: 44px; width: auto; object-fit: contain; filter: drop-shadow(0 2px 10px rgba(255,255,255,0.12)); flex-shrink: 0; }
-    .divider { width: 1px; height: 36px; background: linear-gradient(180deg, transparent, rgba(230,194,122,0.55), transparent); flex-shrink: 0; }
+    .brand { display: flex; align-items: center; gap: 18px; min-width: 0; }
+    .sdu-logo { height: 40px; width: auto; object-fit: contain; filter: drop-shadow(0 2px 10px rgba(255,255,255,0.12)); flex-shrink: 0; }
+    .divider { width: 1px; height: 32px; background: linear-gradient(180deg, transparent, rgba(230,194,122,0.55), transparent); flex-shrink: 0; }
     .title-group { min-width: 0; }
-    .eyebrow { font-size: 11px; font-weight: 700; letter-spacing: 2.6px; text-transform: uppercase; color: var(--sdu-gold); margin-bottom: 4px; opacity: 0.92; }
+    .eyebrow { font-size: 10.5px; font-weight: 700; letter-spacing: 2.6px; text-transform: uppercase; color: var(--sdu-gold); margin-bottom: 3px; opacity: 0.92; }
     .top h1 {
-      font-size: 27px; font-weight: 800; letter-spacing: 0.5px;
+      font-size: 24px; font-weight: 800; letter-spacing: 0.5px;
       background: linear-gradient(90deg, #FFFFFF 0%, #FFE4DF 65%, #E6C27A 100%);
       -webkit-background-clip: text; -webkit-text-fill-color: transparent;
       white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
     }
 
-    .meta { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; justify-content: flex-end; }
+    .meta { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; justify-content: flex-end; }
     .pill {
       background: rgba(255, 255, 255, 0.07);
       backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
       border: 1px solid rgba(255, 255, 255, 0.12);
-      padding: 8px 16px; border-radius: 999px; font-size: 14px; font-weight: 600; color: #F1E8E6;
+      padding: 7px 14px; border-radius: 999px; font-size: 13.5px; font-weight: 600; color: #F1E8E6;
       font-variant-numeric: tabular-nums;
       box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.12);
     }
@@ -139,21 +148,57 @@
 
     @keyframes pulse { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.45; transform: scale(1.35); } }
 
-    .board { display: flex; flex-direction: column; gap: 11px; flex: 1; position: relative; }
+    .stage-container {
+      flex: 1;
+      min-height: 0;
+      display: flex;
+      flex-direction: column;
+      transition: opacity 0.22s ease, transform 0.22s ease;
+    }
+
+    .stage-fade-out {
+      opacity: 0 !important;
+      transform: translateY(-6px) !important;
+    }
+
+    .board { display: flex; flex-direction: column; gap: 10px; flex: 1; min-height: 0; position: relative; }
+
+    .board.two-col {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px 16px;
+      align-content: start;
+    }
 
     .row {
       display: grid;
-      grid-template-columns: 78px 340px 1fr 250px;
+      grid-template-columns: 74px 330px 1fr 230px;
       align-items: center;
-      gap: 18px;
+      gap: 16px;
       background: linear-gradient(135deg, rgba(255, 255, 255, 0.065), rgba(255, 255, 255, 0.025));
       backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
-      padding: 13px 22px;
-      border-radius: 16px;
+      padding: 12px 20px;
+      border-radius: 15px;
       border: 1px solid rgba(255, 255, 255, 0.09);
       box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.12), 0 8px 24px rgba(0, 0, 0, 0.28);
       will-change: transform;
     }
+
+    .board.two-col .row {
+      grid-template-columns: 54px minmax(0, 1.35fr) minmax(70px, 0.9fr) 156px;
+      gap: 12px;
+      padding: 9px 15px;
+    }
+
+    .board.two-col .rank {
+      width: 48px; height: 36px; font-size: 14px;
+    }
+    .board.two-col .row.rank-1 .rank { font-size: 15px; }
+    .board.two-col .info .name { font-size: 15.5px; }
+    .board.two-col .song-inline { font-size: 12.5px; }
+    .board.two-col .total { font-size: 19px; }
+    .board.two-col .detail { font-size: 11.5px; }
+    .board.two-col .bar-wrap { height: 18px; }
 
     .row.rank-1 {
       background: linear-gradient(135deg, rgba(230, 194, 122, 0.16), rgba(155, 13, 20, 0.22));
@@ -164,26 +209,26 @@
     .row.rank-3 { background: linear-gradient(135deg, rgba(217, 119, 6, 0.12), rgba(155, 13, 20, 0.12)); border-color: rgba(217, 119, 6, 0.3); }
 
     .rank {
-      width: 62px; height: 42px; margin: 0 auto; border-radius: 12px;
+      width: 60px; height: 40px; margin: 0 auto; border-radius: 11px;
       display: flex; align-items: center; justify-content: center;
-      font-size: 16px; font-weight: 800; font-variant-numeric: tabular-nums;
+      font-size: 15px; font-weight: 800; font-variant-numeric: tabular-nums;
       color: rgba(255, 240, 236, 0.78);
       background: rgba(255, 255, 255, 0.06); border: 1px solid rgba(255, 255, 255, 0.1);
     }
-    .row.rank-1 .rank { background: linear-gradient(135deg, #FCE3A6, #D4A145); color: #2A0A0D; border-color: rgba(255,255,255,0.6); box-shadow: 0 0 20px rgba(230,194,122,0.55); font-size: 18px; }
-    .row.rank-2 .rank { background: linear-gradient(135deg, #F8FAFC, #94A3B8); color: #0F172A; border-color: rgba(255,255,255,0.5); font-size: 17px; }
-    .row.rank-3 .rank { background: linear-gradient(135deg, #FDBA74, #B45309); color: #220C04; border-color: rgba(255,220,180,0.45); font-size: 17px; }
+    .row.rank-1 .rank { background: linear-gradient(135deg, #FCE3A6, #D4A145); color: #2A0A0D; border-color: rgba(255,255,255,0.6); box-shadow: 0 0 20px rgba(230,194,122,0.55); font-size: 17px; }
+    .row.rank-2 .rank { background: linear-gradient(135deg, #F8FAFC, #94A3B8); color: #0F172A; border-color: rgba(255,255,255,0.5); font-size: 16px; }
+    .row.rank-3 .rank { background: linear-gradient(135deg, #FDBA74, #B45309); color: #220C04; border-color: rgba(255,220,180,0.45); font-size: 16px; }
 
-    .info .name { font-size: 18.5px; font-weight: 700; color: #FFFFFF; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .song-inline { font-size: 14.5px; font-weight: 500; color: rgba(230, 194, 122, 0.88); margin-left: 4px; }
+    .info .name { font-size: 18px; font-weight: 700; color: #FFFFFF; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .song-inline { font-size: 14px; font-weight: 500; color: rgba(230, 194, 122, 0.88); margin-left: 4px; }
     .num-tag {
-      display: inline-block; font-size: 12px; font-weight: 700; color: var(--sdu-gold);
+      display: inline-block; font-size: 11.5px; font-weight: 700; color: var(--sdu-gold);
       background: rgba(155, 13, 20, 0.45); border: 1px solid rgba(230, 194, 122, 0.3);
-      padding: 2px 8px; border-radius: 6px; margin-right: 6px; vertical-align: 1px;
+      padding: 2px 7px; border-radius: 6px; margin-right: 6px; vertical-align: 1px;
     }
 
     .bar-wrap {
-      height: 24px; background: rgba(0, 0, 0, 0.35); border: 1px solid rgba(255, 255, 255, 0.08);
+      height: 22px; background: rgba(0, 0, 0, 0.35); border: 1px solid rgba(255, 255, 255, 0.08);
       border-radius: 999px; overflow: hidden; padding: 3px; box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.5);
     }
     .bar {
@@ -194,52 +239,73 @@
     .row.rank-1 .bar { background: linear-gradient(90deg, #B8111A 0%, #E6C27A 70%, #FFF1C2 100%); box-shadow: 0 0 22px rgba(230, 194, 122, 0.65); }
 
     .score-box { text-align: right; font-variant-numeric: tabular-nums; }
-    .total { font-size: 24px; font-weight: 800; color: #FFFFFF; }
+    .total { font-size: 23px; font-weight: 800; color: #FFFFFF; }
     .row.rank-1 .total { color: #FDE68A; text-shadow: 0 0 20px rgba(230, 194, 122, 0.45); }
-    .detail { font-size: 12.5px; color: rgba(241, 226, 224, 0.72); margin-top: 2px; }
+    .detail { font-size: 12px; color: rgba(241, 226, 224, 0.72); margin-top: 2px; }
 
-    /* Two-page settlement views */
+    /* 两页结果展示视图 */
     .section-banner {
       display: flex; justify-content: space-between; align-items: center;
-      margin-bottom: 14px; padding: 12px 20px; border-radius: 14px;
+      margin-bottom: 12px; padding: 10px 18px; border-radius: 14px;
       background: rgba(155, 13, 20, 0.24); border: 1px solid rgba(230, 194, 122, 0.35);
+      flex-shrink: 0;
     }
-    .section-banner h2 { font-size: 20px; color: #FDE68A; }
-    .section-banner span { font-size: 14px; color: #F4E6E4; }
+    .section-banner h2 { font-size: 18px; color: #FDE68A; }
+    .section-banner span { font-size: 13.5px; color: #F4E6E4; }
+
+    .groups-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px 16px;
+      align-content: start;
+      flex: 1;
+    }
+
+    .groups-grid .row {
+      grid-template-columns: 56px minmax(0, 1.4fr) minmax(70px, 0.8fr) 150px;
+      gap: 12px;
+      padding: 12px 16px;
+    }
+    .groups-grid .rank { width: 50px; height: 38px; font-size: 14.5px; }
+    .groups-grid .total { font-size: 20px; }
 
     .group-badge-win {
-      display: inline-block; padding: 4px 12px; border-radius: 999px; font-size: 13px; font-weight: 700;
-      background: linear-gradient(90deg, #FCE3A6, #D4A145); color: #2A0A0D; margin-left: 10px;
+      display: inline-block; padding: 3px 10px; border-radius: 999px; font-size: 12px; font-weight: 700;
+      background: linear-gradient(90deg, #FCE3A6, #D4A145); color: #2A0A0D; margin-left: 6px;
     }
     .group-badge-duel {
-      display: inline-block; padding: 4px 12px; border-radius: 999px; font-size: 13px; font-weight: 600;
-      background: rgba(255,255,255,0.1); color: #cbd5e1; margin-left: 10px;
+      display: inline-block; padding: 3px 10px; border-radius: 999px; font-size: 12px; font-weight: 600;
+      background: rgba(255,255,255,0.1); color: #cbd5e1; margin-left: 6px;
     }
 
     .duel-grid {
       display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 16px;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 14px;
+      align-content: start;
       flex: 1;
     }
     .duel-card {
       background: linear-gradient(135deg, rgba(255, 255, 255, 0.065), rgba(255, 255, 255, 0.025));
       backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
       border: 1px solid rgba(255, 255, 255, 0.12);
-      border-radius: 18px;
-      padding: 16px;
-      display: flex; flex-direction: column; gap: 12px;
+      border-radius: 16px;
+      padding: 13px 15px;
+      display: flex; flex-direction: column; gap: 10px;
       box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.12), 0 10px 26px rgba(0, 0, 0, 0.32);
+      will-change: transform;
     }
     .duel-header {
       display: flex; justify-content: space-between; align-items: center;
-      font-size: 14px; font-weight: 700; color: var(--sdu-gold);
-      border-bottom: 1px solid rgba(255, 255, 255, 0.1); padding-bottom: 8px;
+      font-size: 13.5px; font-weight: 700; color: var(--sdu-gold);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1); padding-bottom: 6px;
     }
+    .duel-fighters { display: flex; flex-direction: column; gap: 8px; }
     .duel-fighter {
       display: flex; justify-content: space-between; align-items: center;
-      padding: 14px; border-radius: 12px;
-      transition: all 0.3s;
+      padding: 11px 12px; border-radius: 12px;
+      transition: opacity 0.3s ease, filter 0.3s ease, border-color 0.3s ease;
+      will-change: transform;
     }
     .duel-fighter.winner {
       background: linear-gradient(135deg, rgba(155, 13, 20, 0.45), rgba(230, 194, 122, 0.22));
@@ -254,18 +320,19 @@
     }
     .duel-tag-win {
       background: linear-gradient(135deg, #FCE3A6, #D4A145); color: #2A0A0D;
-      font-size: 12px; font-weight: 800; padding: 3px 10px; border-radius: 999px;
+      font-size: 11.5px; font-weight: 800; padding: 2px 9px; border-radius: 999px;
     }
     .duel-tag-out {
       background: rgba(255,255,255,0.1); color: #94a3b8;
-      font-size: 12px; font-weight: 600; padding: 3px 10px; border-radius: 999px;
+      font-size: 11.5px; font-weight: 600; padding: 2px 9px; border-radius: 999px;
     }
 
     .footer-brand {
-      margin-top: 18px; padding-top: 12px;
+      margin-top: 12px; padding-top: 10px;
       display: flex; justify-content: space-between; align-items: center;
       font-size: 12px; letter-spacing: 1.4px; color: rgba(255, 240, 236, 0.45);
       border-top: 1px solid rgba(255, 255, 255, 0.07);
+      flex-shrink: 0;
     }
     .tech-support { display: inline-flex; align-items: center; gap: 6px; font-size: 11.5px; letter-spacing: 0.6px; color: rgba(255, 240, 236, 0.42); }
     .tech-support img { height: 16px; width: auto; opacity: 0.8; vertical-align: middle; }
@@ -278,7 +345,8 @@
       align-items: center;
       justify-content: center;
       text-align: center;
-      padding: 60px 24px;
+      padding: 40px 24px;
+      transition: opacity 0.22s ease, transform 0.22s ease;
     }
 
     .standby-panel {
@@ -311,38 +379,18 @@
       filter: drop-shadow(0 4px 16px rgba(255, 255, 255, 0.16));
     }
 
-    .standby-sep {
-      font-size: 38px;
-      font-weight: 200;
-      color: rgba(230, 194, 122, 0.75);
-    }
-
+    .standby-sep { font-size: 38px; font-weight: 200; color: rgba(230, 194, 122, 0.75); }
     .standby-college {
-      font-size: 40px;
-      font-weight: 800;
-      letter-spacing: 6px;
+      font-size: 40px; font-weight: 800; letter-spacing: 6px;
       background: linear-gradient(90deg, #FFFFFF 0%, #FFE4DF 65%, #E6C27A 100%);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
     }
-
-    .standby-sub {
-      font-size: 15px;
-      letter-spacing: 4px;
-      color: rgba(243, 228, 225, 0.6);
-      text-transform: uppercase;
-    }
+    .standby-sub { font-size: 15px; letter-spacing: 4px; color: rgba(243, 228, 225, 0.6); text-transform: uppercase; }
 
     /* 奥运赛果式自上而下优雅浮入动画 */
     @keyframes olympicEnter {
-      0% {
-        opacity: 0;
-        transform: translateY(-14px);
-      }
-      100% {
-        opacity: 1;
-        transform: translateY(0);
-      }
+      0% { opacity: 0; transform: translateY(-14px); }
+      100% { opacity: 1; transform: translateY(0); }
     }
 
     .olympic-in {
@@ -385,7 +433,7 @@
       </div>
     </div>
 
-    <div id="stageContent" class="board"></div>
+    <div id="stageContent" class="stage-container"></div>
 
     <div class="footer-brand">
       <span>SHANDONG UNIVERSITY · SCHOOL OF SOFTWARE · 十佳歌手大赛实时计票系统</span>
@@ -406,8 +454,57 @@
       return `${name}${song}`;
     }
 
+    // 2D FLIP 平滑名次移动辅助函数
+    function captureRects(domMap) {
+      const rects = new Map();
+      domMap.forEach((el, key) => {
+        rects.set(key, el.getBoundingClientRect());
+      });
+      return rects;
+    }
+
+    function runFlip(domMap, firstRects) {
+      domMap.forEach((el, key) => {
+        const first = firstRects.get(key);
+        if (!first) return;
+        const last = el.getBoundingClientRect();
+        const dx = first.left - last.left;
+        const dy = first.top - last.top;
+        if (Math.abs(dx) > 1 || Math.abs(dy) > 1) {
+          el.style.transition = 'none';
+          el.style.transform = `translate(${dx}px, ${dy}px)`;
+          el.getBoundingClientRect();
+          el.style.transition = 'transform 0.6s cubic-bezier(0.22, 1, 0.36, 1)';
+          el.style.transform = 'translate(0, 0)';
+        }
+      });
+    }
+
+    function applyOlympicEntrance(container) {
+      const items = container.querySelectorAll('.section-banner, .row, .duel-card, .standby-panel');
+      items.forEach((el, idx) => {
+        el.classList.remove('olympic-in');
+        el.style.animationDelay = '';
+        void el.offsetWidth;
+        el.style.animationDelay = `${idx * 42}ms`;
+        el.classList.add('olympic-in');
+        el.addEventListener('animationend', () => {
+          el.classList.remove('olympic-in');
+          el.style.animationDelay = '';
+        }, { once: true });
+      });
+    }
+
     let currentViewMode = '';
     const liveRowMap = new Map();
+    const groupRowMap = new Map();
+    const duelCardMap = new Map(); // group -> { cardEl, fighterMap }
+
+    function clearViewMaps() {
+      liveRowMap.clear();
+      groupRowMap.clear();
+      duelCardMap.clear();
+    }
 
     function renderLiveBoard(container, data) {
       const { settings, leaderboard } = data;
@@ -416,19 +513,17 @@
       const sorted = [...leaderboard].sort((a, b) => b.totalScore - a.totalScore);
       const maxScore = Math.max(...sorted.map(c => c.totalScore), 1);
 
-      if (currentViewMode !== 'live') {
-        container.className = 'board';
-        container.innerHTML = '';
-        liveRowMap.clear();
+      let boardEl = container.querySelector('.board');
+      if (currentViewMode !== 'live' || !boardEl) {
+        clearViewMaps();
+        container.innerHTML = '<div class="board"></div>';
+        boardEl = container.querySelector('.board');
         currentViewMode = 'live';
       }
 
-      // First: 记录已有节点位置
-      const firstTops = new Map();
-      liveRowMap.forEach((el, id) => {
-        firstTops.set(id, el.getBoundingClientRect().top);
-      });
+      boardEl.className = `board ${sorted.length > 6 ? 'two-col' : ''}`;
 
+      const firstRects = captureRects(liveRowMap);
       const validIds = new Set(sorted.map(c => c.id));
       for (const [id, el] of liveRowMap.entries()) {
         if (!validIds.has(id)) {
@@ -443,7 +538,6 @@
         if (!row) {
           row = document.createElement('div');
           row.className = 'row';
-          row.dataset.id = c.id;
           row.innerHTML = `
             <div class="rank"></div>
             <div class="info"><div class="name"></div></div>
@@ -466,24 +560,10 @@
         const groupDetail = isTop10 && roundNum === 1 && c.groupTotal !== undefined ? ` · 组票 ${c.groupTotal}` : '';
         row.querySelector('.detail').textContent = `观众 ${c.audienceVotes} 票 · 导师 ${c.judgeVotes} 票${groupDetail}`;
 
-        container.appendChild(row);
+        boardEl.appendChild(row);
       });
 
-      // Last + Invert + Play (FLIP 平滑名次移动动画)
-      sorted.forEach(c => {
-        const row = liveRowMap.get(c.id);
-        const firstTop = firstTops.get(c.id);
-        if (firstTop === undefined) return;
-        const lastTop = row.getBoundingClientRect().top;
-        const deltaY = firstTop - lastTop;
-        if (Math.abs(deltaY) > 1) {
-          row.style.transition = 'none';
-          row.style.transform = `translateY(${deltaY}px)`;
-          row.getBoundingClientRect(); // force reflow
-          row.style.transition = 'transform 0.65s cubic-bezier(0.22, 1, 0.36, 1)';
-          row.style.transform = 'translateY(0)';
-        }
-      });
+      runFlip(liveRowMap, firstRects);
     }
 
     function buildR1Groups(board) {
@@ -501,113 +581,173 @@
     }
 
     function renderR1GroupsView(container, data) {
-      currentViewMode = 'r1-groups';
-      liveRowMap.clear();
-      container.className = 'board';
       const board = data.allRound1Leaderboard || data.leaderboard || [];
       const groupList = buildR1Groups(board);
       const maxTotal = Math.max(...groupList.map(g => g.total), 1);
 
-      container.innerHTML = `
-        <div class="section-banner">
-          <h2>🏆 第 1 轮 · 八组双人组合总票数榜（第一页）</h2>
-          <span>组合前 2 名（共 4 位选手）直接晋级十强</span>
-        </div>
-        ${groupList.map((g, idx) => {
-          const rankNum = idx + 1;
-          const isTop2 = idx < 2;
-          const pct = g.total === 0 ? 0 : Math.max(4, Math.round((g.total / maxTotal) * 100));
-          const names = g.members.map(m => `${m.number}号 ${m.name || '待定'}${m.song ? `《${m.song}》` : ''}`).join(' & ');
-          return `
-            <div class="row ${isTop2 ? 'rank-1' : ''}" style="${!isTop2 ? 'opacity:0.85;' : ''}">
-              <div class="rank">${formatOrdinal(rankNum)}</div>
-              <div class="info">
-                <div class="name">
-                  <span class="num-tag">第 ${g.group} 组</span>
-                  ${isTop2 ? '<span class="group-badge-win">✅ 组合直通晋级</span>' : '<span class="group-badge-duel">进入组内二选一</span>'}
-                </div>
-                <div class="song" style="margin-top:4px; color:rgba(255,240,236,0.78); font-size:13.5px;">${names}</div>
-              </div>
-              <div class="bar-wrap"><div class="bar" style="width:${pct}%"></div></div>
-              <div class="score-box">
-                <div class="total">${g.total} 分</div>
-                <div class="detail">${g.members.map(m => `${m.number}号:${m.totalScore}`).join(' + ')}</div>
-              </div>
+      let gridEl = container.querySelector('.groups-grid');
+      if (currentViewMode !== 'r1-groups' || !gridEl) {
+        clearViewMaps();
+        container.innerHTML = `
+          <div class="section-banner">
+            <h2>🏆 第 1 轮 · 八组双人组合总票数榜（第一页）</h2>
+            <span>组合前 2 名（共 4 位选手）直接晋级十强</span>
+          </div>
+          <div class="groups-grid"></div>
+        `;
+        gridEl = container.querySelector('.groups-grid');
+        currentViewMode = 'r1-groups';
+      }
+
+      const firstRects = captureRects(groupRowMap);
+
+      groupList.forEach((g, idx) => {
+        const rankNum = idx + 1;
+        const isTop2 = idx < 2;
+        const pct = g.total === 0 ? 0 : Math.max(4, Math.round((g.total / maxTotal) * 100));
+        const names = g.members.map(m => `${m.number}号 ${m.name || '待定'}${m.song ? `《${m.song}》` : ''}`).join(' & ');
+
+        let row = groupRowMap.get(g.group);
+        if (!row) {
+          row = document.createElement('div');
+          row.className = 'row';
+          row.innerHTML = `
+            <div class="rank"></div>
+            <div class="info">
+              <div class="name"></div>
+              <div class="song" style="margin-top:4px; color:rgba(255,240,236,0.78); font-size:12.5px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;"></div>
             </div>
+            <div class="bar-wrap"><div class="bar"></div></div>
+            <div class="score-box"><div class="total"></div><div class="detail"></div></div>
           `;
-        }).join('')}
-      `;
+          groupRowMap.set(g.group, row);
+        }
+
+        row.className = `row ${isTop2 ? 'rank-1' : ''}`;
+        row.style.opacity = isTop2 ? '1' : '0.88';
+        row.querySelector('.rank').textContent = formatOrdinal(rankNum);
+        row.querySelector('.info .name').innerHTML = `
+          <span class="num-tag">第 ${g.group} 组</span>
+          ${isTop2 ? '<span class="group-badge-win">✅ 直通晋级</span>' : '<span class="group-badge-duel">组内二选一</span>'}
+        `;
+        row.querySelector('.info .song').textContent = names;
+        row.querySelector('.bar').style.width = `${pct}%`;
+        row.querySelector('.total').textContent = `${g.total} 分`;
+        row.querySelector('.detail').textContent = g.members.map(m => `${m.number}号:${m.totalScore}`).join(' + ');
+
+        gridEl.appendChild(row);
+      });
+
+      runFlip(groupRowMap, firstRects);
     }
 
     function renderR1DuelsView(container, data) {
-      currentViewMode = 'r1-duels';
-      liveRowMap.clear();
-      container.className = 'board';
       const board = data.allRound1Leaderboard || data.leaderboard || [];
       const groupList = buildR1Groups(board);
       const remaining6 = groupList.slice(2);
 
-      container.innerHTML = `
-        <div class="section-banner">
-          <h2>⚔️ 第 1 轮 · 其余六组组内二选一结果（第二页）</h2>
-          <span>每组个人分更高者晋级十强（共 6 位晋级）</span>
-        </div>
-        <div class="duel-grid">
-          ${remaining6.map(g => {
-            const m1 = g.members[0];
-            const m2 = g.members[1];
-            return `
-              <div class="duel-card">
-                <div class="duel-header">
-                  <span>第 ${g.group} 组 · 组内二选一</span>
-                  <span>组票 ${g.total} 分</span>
-                </div>
-                ${[m1, m2].filter(Boolean).map((m, i) => {
-                  const isWin = i === 0;
-                  return `
-                    <div class="duel-fighter ${isWin ? 'winner' : 'eliminated'}">
-                      <div>
-                        <div style="font-size:16px; font-weight:700;">
-                          <span class="num-tag">${m.number}号</span>${formatNameSong(m)}
-                        </div>
-                        <div style="font-size:12px; color:rgba(255,240,236,0.72); margin-top:4px;">
-                          观众 ${m.audienceVotes} 票 · 导师 ${m.judgeVotes} 票
-                        </div>
-                      </div>
-                      <div style="text-align:right;">
-                        <div style="font-size:20px; font-weight:800; color:${isWin ? '#FDE68A' : '#cbd5e1'};">${m.totalScore} 分</div>
-                        <div style="margin-top:4px;">
-                          ${isWin ? '<span class="duel-tag-win">✅ 晋级</span>' : '<span class="duel-tag-out">未晋级</span>'}
-                        </div>
-                      </div>
-                    </div>
-                  `;
-                }).join('')}
+      let gridEl = container.querySelector('.duel-grid');
+      if (currentViewMode !== 'r1-duels' || !gridEl) {
+        clearViewMaps();
+        container.innerHTML = `
+          <div class="section-banner">
+            <h2>⚔️ 第 1 轮 · 其余六组组内二选一结果（第二页）</h2>
+            <span>每组个人分更高者晋级十强（共 6 位晋级）</span>
+          </div>
+          <div class="duel-grid"></div>
+        `;
+        gridEl = container.querySelector('.duel-grid');
+        currentViewMode = 'r1-duels';
+      }
+
+      const firstCardRects = new Map();
+      duelCardMap.forEach((entry, gId) => {
+        firstCardRects.set(gId, entry.cardEl.getBoundingClientRect());
+      });
+
+      const validGroups = new Set(remaining6.map(g => g.group));
+      for (const [gId, entry] of duelCardMap.entries()) {
+        if (!validGroups.has(gId)) {
+          entry.cardEl.remove();
+          duelCardMap.delete(gId);
+        }
+      }
+
+      remaining6.forEach(g => {
+        let entry = duelCardMap.get(g.group);
+        if (!entry) {
+          const cardEl = document.createElement('div');
+          cardEl.className = 'duel-card';
+          cardEl.innerHTML = `
+            <div class="duel-header"><span class="dh-left"></span><span class="dh-right"></span></div>
+            <div class="duel-fighters"></div>
+          `;
+          entry = { cardEl, fighterMap: new Map() };
+          duelCardMap.set(g.group, entry);
+        }
+
+        entry.cardEl.querySelector('.dh-left').textContent = `第 ${g.group} 组 · 组内二选一`;
+        entry.cardEl.querySelector('.dh-right').textContent = `组票 ${g.total} 分`;
+
+        const fightersEl = entry.cardEl.querySelector('.duel-fighters');
+        const firstFighterRects = captureRects(entry.fighterMap);
+
+        g.members.forEach((m, i) => {
+          const isWin = i === 0;
+          let fEl = entry.fighterMap.get(m.id);
+          if (!fEl) {
+            fEl = document.createElement('div');
+            fEl.className = 'duel-fighter';
+            fEl.innerHTML = `
+              <div style="min-width:0; padding-right:8px;">
+                <div class="df-name" style="font-size:15px; font-weight:700; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;"></div>
+                <div class="df-sub" style="font-size:11.5px; color:rgba(255,240,236,0.72); margin-top:3px;"></div>
+              </div>
+              <div style="text-align:right; flex-shrink:0;">
+                <div class="df-score" style="font-size:19px; font-weight:800;"></div>
+                <div class="df-tag" style="margin-top:3px;"></div>
               </div>
             `;
-          }).join('')}
-        </div>
-      `;
-    }
+            entry.fighterMap.set(m.id, fEl);
+          }
 
-    let lastViewSignature = '';
+          fEl.className = `duel-fighter ${isWin ? 'winner' : 'eliminated'}`;
+          fEl.querySelector('.df-name').innerHTML = `<span class="num-tag">${m.number}号</span>${formatNameSong(m)}`;
+          fEl.querySelector('.df-sub').textContent = `观众 ${m.audienceVotes} 票 · 导师 ${m.judgeVotes} 票`;
+          const scoreEl = fEl.querySelector('.df-score');
+          scoreEl.textContent = `${m.totalScore} 分`;
+          scoreEl.style.color = isWin ? '#FDE68A' : '#cbd5e1';
+          fEl.querySelector('.df-tag').innerHTML = isWin ? '<span class="duel-tag-win">✅ 晋级</span>' : '<span class="duel-tag-out">未晋级</span>';
 
-    function applyOlympicEntrance(container) {
-      const items = container.querySelectorAll('.section-banner, .row, .duel-card, .standby-panel');
-      items.forEach((el, idx) => {
-        el.classList.remove('olympic-in');
-        el.style.animationDelay = '';
-        void el.offsetWidth;
-        el.style.animationDelay = `${idx * 45}ms`;
-        el.classList.add('olympic-in');
-        el.addEventListener('animationend', () => {
-          el.classList.remove('olympic-in');
-          el.style.animationDelay = '';
-        }, { once: true });
+          fightersEl.appendChild(fEl);
+        });
+
+        gridEl.appendChild(entry.cardEl);
+        runFlip(entry.fighterMap, firstFighterRects);
+      });
+
+      // 对 6 张卡片本身也执行 2D FLIP
+      duelCardMap.forEach((entry, gId) => {
+        const first = firstCardRects.get(gId);
+        if (!first) return;
+        const last = entry.cardEl.getBoundingClientRect();
+        const dx = first.left - last.left;
+        const dy = first.top - last.top;
+        if (Math.abs(dx) > 1 || Math.abs(dy) > 1) {
+          entry.cardEl.style.transition = 'none';
+          entry.cardEl.style.transform = `translate(${dx}px, ${dy}px)`;
+          entry.cardEl.getBoundingClientRect();
+          entry.cardEl.style.transition = 'transform 0.6s cubic-bezier(0.22, 1, 0.36, 1)';
+          entry.cardEl.style.transform = 'translate(0, 0)';
+        }
       });
     }
 
-    function render(data) {
+    let lastViewSignature = '';
+    let pendingTransitionTimer = null;
+    let latestStateData = null;
+
+    function applyRender(data, triggerEntrance) {
       const { settings, stats } = data;
       const topHeaderEl = document.getElementById('topHeader');
       const standbyStageEl = document.getElementById('standbyStage');
@@ -618,21 +758,20 @@
       const activeGroup = Number(settings.activeGroup) || 0;
       const isStandby = Boolean(settings.standbyMode);
       const view = isTop10 && roundNum === 1 ? (settings.screenView || 'live') : 'live';
-      const viewSignature = `${isStandby}|${view}|${roundNum}|${activeGroup}`;
-      const viewChanged = viewSignature !== lastViewSignature;
-      lastViewSignature = viewSignature;
 
       if (isStandby) {
         topHeaderEl.style.display = 'none';
         container.style.display = 'none';
         standbyStageEl.style.display = 'flex';
-        if (viewChanged) applyOlympicEntrance(standbyStageEl);
+        standbyStageEl.classList.remove('stage-fade-out');
+        if (triggerEntrance) applyOlympicEntrance(standbyStageEl);
         return;
       }
 
       topHeaderEl.style.display = 'flex';
       container.style.display = 'flex';
       standbyStageEl.style.display = 'none';
+      container.classList.remove('stage-fade-out');
 
       document.getElementById('title').textContent = settings.title;
 
@@ -655,8 +794,43 @@
       else if (view === 'r1-duels') renderR1DuelsView(container, data);
       else renderLiveBoard(container, data);
 
-      if (viewChanged) {
+      if (triggerEntrance) {
         applyOlympicEntrance(container);
+      }
+    }
+
+    function render(data) {
+      latestStateData = data;
+      const { settings } = data;
+      const isTop10 = settings.mode === 'top10';
+      const roundNum = Number(settings.currentRound);
+      const activeGroup = Number(settings.activeGroup) || 0;
+      const isStandby = Boolean(settings.standbyMode);
+      const view = isTop10 && roundNum === 1 ? (settings.screenView || 'live') : 'live';
+      const nextSignature = `${isStandby}|${view}|${roundNum}|${activeGroup}`;
+
+      if (!lastViewSignature) {
+        lastViewSignature = nextSignature;
+        applyRender(data, true);
+        return;
+      }
+
+      if (nextSignature !== lastViewSignature) {
+        lastViewSignature = nextSignature;
+        if (pendingTransitionTimer) clearTimeout(pendingTransitionTimer);
+        const standbyStageEl = document.getElementById('standbyStage');
+        const container = document.getElementById('stageContent');
+        const visibleEl = standbyStageEl.style.display === 'flex' ? standbyStageEl : container;
+        visibleEl.classList.add('stage-fade-out');
+        pendingTransitionTimer = setTimeout(() => {
+          pendingTransitionTimer = null;
+          applyRender(latestStateData, true);
+        }, 220);
+        return;
+      }
+
+      if (!pendingTransitionTimer) {
+        applyRender(data, false);
       }
     }
 

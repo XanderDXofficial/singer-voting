@@ -313,7 +313,7 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      transition: opacity 0.45s ease;
+      transition: opacity 0.38s ease;
     }
 
     #introSplash.hide {
@@ -337,7 +337,7 @@
       letter-spacing: 4px;
       color: rgba(255, 255, 255, 0.92);
       opacity: 0;
-      animation: splashTextSeq 2.2s ease both;
+      animation: splashTextSeq 1.3s ease both;
     }
 
     .splash-logo {
@@ -346,7 +346,7 @@
       max-width: 62vw;
       height: auto;
       opacity: 0;
-      animation: splashLogoSeq 2.7s ease 2.25s both;
+      animation: splashLogoSeq 1.6s ease 1.35s both;
     }
 
     @keyframes splashTextSeq {
@@ -425,12 +425,14 @@
       width: 100%;
       padding: 12px;
       border-radius: 12px;
-      border: 1px solid rgba(230, 194, 122, 0.45);
-      background: linear-gradient(90deg, #9B0D14 0%, #D91E2A 60%, #C99738 100%);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      background: linear-gradient(180deg, #A81018 0%, #860B11 100%);
       color: #FFFFFF;
       font-size: 15.5px;
       font-weight: 800;
+      letter-spacing: 1px;
       cursor: pointer;
+      box-shadow: 0 6px 20px rgba(155, 13, 20, 0.42), inset 0 1px 0 rgba(255, 255, 255, 0.2);
     }
 
     .footer {
@@ -450,16 +452,22 @@
       display: block;
       width: 100%;
       padding: 14px;
-      border: 1px solid rgba(230, 194, 122, 0.45);
+      border: 1px solid rgba(255, 255, 255, 0.22);
       border-radius: 14px;
-      background: linear-gradient(90deg, #9B0D14 0%, #D91E2A 55%, #C99738 100%);
+      background: linear-gradient(180deg, #A81018 0%, #860B11 100%);
       color: #FFFFFF;
       font-size: 16px;
       font-weight: 800;
       letter-spacing: 0.6px;
       cursor: pointer;
-      box-shadow: 0 8px 26px rgba(155, 13, 20, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.25);
+      box-shadow: 0 8px 26px rgba(155, 13, 20, 0.48), inset 0 1px 0 rgba(255, 255, 255, 0.22);
       transition: opacity 0.2s, transform 0.15s;
+    }
+
+    .song {
+      font-size: 13px;
+      color: rgba(230, 194, 122, 0.88);
+      margin-top: 3px;
     }
 
     .btn:active:not(:disabled) { transform: scale(0.99); }
@@ -649,13 +657,14 @@
 
       listEl.innerHTML = leaderboard.map(c => {
         const isSelected = selectedIds.has(c.id);
-        const songHtml = c.song ? ` <span style="color:#E6C27A; font-weight:500; font-size:14px;">《${c.song}》</span>` : '';
+        const songText = c.song ? `《${c.song}》` : '';
         return `
           <div class="card ${isSelected ? 'selected' : ''}" onclick="toggle(${c.id})">
             <div class="card-left">
               <div class="num">${c.number}</div>
               <div>
-                <div class="name">${c.name || '待填写选手'}${songHtml}</div>
+                <div class="name">${c.number}号 ${c.name || '待填写选手'}</div>
+                ${songText ? `<div class="song">${songText}</div>` : ''}
               </div>
             </div>
             <div class="check">${isSelected ? '✓' : ''}</div>
@@ -754,7 +763,7 @@
       ws.onclose = () => setTimeout(connectWS, 2000);
     }
 
-    // 5 秒纯 CSS 黑底开屏动画逻辑
+    // 3 秒纯 CSS 黑底开屏动画逻辑
     (function setupSplash() {
       const splash = document.getElementById('introSplash');
       const skipBtn = document.getElementById('skipSplashBtn');
@@ -772,11 +781,11 @@
           splash.remove();
           splashFinished = true;
           maybeShowWelcomePopup();
-        }, 460);
+        }, 380);
       }
 
       skipBtn.addEventListener('click', dismissSplash);
-      setTimeout(dismissSplash, 5000);
+      setTimeout(dismissSplash, 3000);
     })();
 
     init();
