@@ -34,7 +34,9 @@ function createDefaultState() {
       endTime: '',   // ISO string or empty
       adminPassword: 'admin',
       judgeCodes: ['J1', 'J2', 'J3'],
-      activeContestantIds: []
+      activeContestantIds: [],
+      standbyMode: false,
+      welcomePopupText: '欢迎来到山东大学软件学院十佳歌手大赛！\n请根据现场主持人口令为您喜爱的选手投票。'
     },
     contestants: Array.from({ length: 10 }, (_, i) => ({
       id: i + 1,
@@ -217,7 +219,9 @@ function getPublicState() {
       votingStatus: state.settings.votingStatus,
       startTime: state.settings.startTime,
       endTime: state.settings.endTime,
-      activeContestantIds: state.settings.activeContestantIds || []
+      activeContestantIds: state.settings.activeContestantIds || [],
+      standbyMode: Boolean(state.settings.standbyMode),
+      welcomePopupText: state.settings.welcomePopupText ?? ''
     },
     leaderboard,
     allRound1Leaderboard,
@@ -269,20 +273,24 @@ setInterval(() => {
 app.use(express.json({ limit: '5mb' }));
 app.use(express.static(path.join(__dirname, 'public')));
 
-// 1张/秒平滑加票管理
-const activeDrips = new Map(); // contestantId -> { timer, remaining, round }
-
-function stopAllDrips() {
-  activeDrips.forEach(entry => clearInterval(entry.timer));
-  activeDrips.clear();
-}
-
-function getDripStatus() {
-  return Array.from(activeDrips.entries()).map(([contestantId, info]) => ({
-    contestantId,
-    remaining: info.remaining,
-    round: info.round
-  }));
+// 计算当前轮次各选手的后台手动加票数（仅管理后台可见）
+function getManualCounts() {
+  const bucketKeys = getRoundBucketKeys();
+  const counts = {};
+  state.contestants.forEach(c => {
+    counts[c.id] = 0;
+  });
+  bucketKeys.forEach(bk => {
+    const roundManual = state.manualVotes?.[bk] || {};
+    Object.entries(roundManual).forEach(([cid, count]) => {
+      const numId = Number(cid);
+      const val = Number(count) || 0;
+      if (counts[numId] !== undefined) {
+        counts[numId] += val;
+      }
+    });
+  });
+  return counts;
 }
 
 // 简单的管理员鉴权中间件
@@ -311,12 +319,12 @@ app.get('/api/state', (req, res) => {
   res.json(getPublicState());
 });
 
-// 获取完整后台配置（含导师口令、全部选手及当前加票任务）
+// 获取完整后台配置（含导师口令、全部选手及后台加票统计）
 app.get('/api/admin/config', requireAdmin, (req, res) => {
   res.json({
     settings: state.settings,
     allContestants: state.contestants,
-    activeDrips: getDripStatus(),
+    manualCounts: getManualCounts(),
     publicState: getPublicState()
   });
 });
@@ -336,7 +344,9 @@ app.post('/api/admin/settings', requireAdmin, (req, res) => {
     'endTime',
     'adminPassword',
     'judgeCodes',
-    'activeContestantIds'
+    'activeContestantIds',
+    'standbyMode',
+    'welcomePopupText'
   ];
   allowed.forEach(key => {
     if (req.body[key] !== undefined) {
@@ -368,7 +378,6 @@ app.post('/api/admin/contestants', requireAdmin, (req, res) => {
 
 // 十佳定制模式：初始化16位空白选手（8组两人配对）
 app.post('/api/admin/top10/init-16', requireAdmin, (req, res) => {
-  stopAllDrips();
   state.contestants = Array.from({ length: 16 }, (_, i) => ({
     id: i + 1,
     number: String(i + 1).padStart(2, '0'),
@@ -394,7 +403,6 @@ app.post('/api/admin/top10/advance', requireAdmin, (req, res) => {
   if (!nextRound || qualifiedIds.length === 0) {
     return res.status(400).json({ error: '请选择晋级选手与目标轮次' });
   }
-  stopAllDrips();
   state.settings.mode = 'top10';
   state.settings.currentRound = nextRound;
   state.settings.activeGroup = 0;
@@ -420,7 +428,6 @@ app.post('/api/admin/archive/import', requireAdmin, (req, res) => {
   if (!incoming || !incoming.settings || !Array.isArray(incoming.contestants)) {
     return res.status(400).json({ error: '无效的项目存档文件格式' });
   }
-  stopAllDrips();
   const def = createDefaultState();
   state = {
     ...def,
@@ -435,50 +442,44 @@ app.post('/api/admin/archive/import', requireAdmin, (req, res) => {
   res.json({ ok: true, state: getPublicState() });
 });
 
-// 人工微调（1张/秒平滑加票）
-app.post('/api/admin/drip/start', requireAdmin, (req, res) => {
+// 后台手动加票（按一下加指定张数，默认 +1）
+app.post('/api/admin/manual-vote', requireAdmin, (req, res) => {
   const contestantId = Number(req.body.contestantId);
-  const count = Math.min(Math.max(Number(req.body.count) || 0, 1), 500);
-  if (!state.contestants.some(c => c.id === contestantId)) {
-    return res.status(400).json({ error: '无效的选手' });
+  const delta = req.body.delta !== undefined ? Number(req.body.delta) : 1;
+  if (!state.contestants.some(c => c.id === contestantId) || isNaN(delta)) {
+    return res.status(400).json({ error: '无效的选手或票数参数' });
   }
-
-  const round = getVoteBucketKey();
-  const addOneVote = () => {
-    if (!state.manualVotes[round]) state.manualVotes[round] = {};
-    state.manualVotes[round][contestantId] = (state.manualVotes[round][contestantId] || 0) + 1;
-    saveState();
-    broadcastState();
-  };
-
-  if (activeDrips.has(contestantId)) {
-    const existing = activeDrips.get(contestantId);
-    existing.remaining += count;
-    return res.json({ ok: true, activeDrips: getDripStatus() });
-  }
-
-  // 立即加第1票，其余每秒加1票
-  addOneVote();
-  const leftAfterFirst = count - 1;
-  if (leftAfterFirst > 0) {
-    const entry = { remaining: leftAfterFirst, round, timer: null };
-    entry.timer = setInterval(() => {
-      addOneVote();
-      entry.remaining -= 1;
-      if (entry.remaining <= 0) {
-        clearInterval(entry.timer);
-        activeDrips.delete(contestantId);
-      }
-    }, 1000);
-    activeDrips.set(contestantId, entry);
-  }
-
-  res.json({ ok: true, activeDrips: getDripStatus() });
+  const bucketKey = getVoteBucketKey();
+  if (!state.manualVotes[bucketKey]) state.manualVotes[bucketKey] = {};
+  const nextVal = Math.max(0, (state.manualVotes[bucketKey][contestantId] || 0) + delta);
+  state.manualVotes[bucketKey][contestantId] = nextVal;
+  saveState();
+  broadcastState();
+  const manualCounts = getManualCounts();
+  res.json({
+    ok: true,
+    manualCount: manualCounts[contestantId] || 0,
+    manualCounts,
+    state: getPublicState()
+  });
 });
 
-app.post('/api/admin/drip/stop', requireAdmin, (req, res) => {
-  stopAllDrips();
-  res.json({ ok: true, activeDrips: [] });
+// 向所有在线投票端实时发送自定义弹窗
+app.post('/api/admin/popup/broadcast', requireAdmin, (req, res) => {
+  const message = String(req.body.message || '').trim();
+  if (!message) {
+    return res.status(400).json({ error: '弹窗内容不能为空' });
+  }
+  const payload = JSON.stringify({
+    type: 'POPUP_BROADCAST',
+    data: { id: Date.now(), message }
+  });
+  wss.clients.forEach(client => {
+    if (client.readyState === WebSocket.OPEN) {
+      client.send(payload);
+    }
+  });
+  res.json({ ok: true });
 });
 
 // 批量生成门票码
@@ -531,7 +532,6 @@ app.post('/api/admin/reset', requireAdmin, (req, res) => {
   const { type } = req.body; // 'round' | 'tickets'
   const bucketKeys = getRoundBucketKeys();
   if (type === 'round') {
-    stopAllDrips();
     Object.values(state.tickets).forEach(t => {
       if (t.votedRounds) {
         bucketKeys.forEach(bk => delete t.votedRounds[bk]);

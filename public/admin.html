@@ -24,13 +24,14 @@
     h2 { font-size: 18px; margin-bottom: 14px; border-left: 4px solid #9B0D14; padding-left: 10px; }
     .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 14px; }
     label { display: block; font-size: 13px; color: #475569; margin-bottom: 6px; font-weight: 600; }
-    input, select {
+    input, select, textarea {
       width: 100%;
       padding: 10px 12px;
       border: 1px solid #cbd5e1;
       border-radius: 8px;
       font-size: 14px;
       background: #fff;
+      font-family: inherit;
     }
     .btn {
       padding: 10px 16px;
@@ -197,11 +198,33 @@
           <h2>1. 投票开关与实时状态</h2>
           <p id="statusSummary" style="margin-bottom: 12px; color: #334155; font-size: 15px;"></p>
           <div class="row-actions">
+            <button id="standbyBtn" class="btn btn-crimson" onclick="toggleStandbyMode()">🌙 切换至赛前待机页</button>
             <button class="btn btn-green" onclick="setStatus('open')">▶ 立即开启投票</button>
             <button class="btn btn-amber" onclick="setStatus('paused')">⏸ 暂停投票</button>
             <button class="btn btn-red" onclick="setStatus('ended')">⏹ 结束本轮投票</button>
             <a href="/screen.html" target="_blank"><button class="btn btn-gray" type="button">📺 打开大屏幕榜单</button></a>
             <a href="/judge.html" target="_blank"><button class="btn btn-gray" type="button">🎓 打开导师投票页</button></a>
+          </div>
+        </div>
+
+        <!-- 弹窗公告管理 -->
+        <div class="card">
+          <h2>📢 弹窗公告管理（手机端首次弹窗 & 赛中实时弹窗）</h2>
+          <div class="grid">
+            <div>
+              <label>首次进入投票页弹窗内容（底部固定为“好”按钮）</label>
+              <textarea id="cfgWelcomePopup" rows="3" placeholder="请输入观众/导师第一次打开页面时看到的提示内容..."></textarea>
+              <div class="row-actions">
+                <button class="btn" onclick="saveWelcomePopup()">💾 保存首次进入弹窗内容</button>
+              </div>
+            </div>
+            <div>
+              <label>比赛过程中临时发送全局弹窗（所有在线手机立即弹出）</label>
+              <textarea id="broadcastPopupMsg" rows="3" placeholder="例如：下一组选手即将登场，请大家做好投票准备！"></textarea>
+              <div class="row-actions">
+                <button class="btn btn-crimson" onclick="broadcastPopup()">📢 立即向所有手机推送弹窗</button>
+              </div>
+            </div>
           </div>
         </div>
 
@@ -303,24 +326,23 @@
           </div>
         </div>
 
-        <!-- 人工微调（1张/秒加票） -->
+        <!-- 人工微调（按一下加 1 张） -->
         <div class="card" style="border: 1px dashed #94a3b8;">
-          <h2>5. 票数微调（1 张/秒平滑加票）</h2>
-          <div class="grid">
-            <div>
-              <label>选择选手</label>
-              <select id="dripContestant"></select>
-            </div>
-            <div>
-              <label>增加票数（张）</label>
-              <input id="dripCount" type="number" value="10" min="1" max="500" />
-            </div>
-          </div>
-          <div class="row-actions">
-            <button class="btn btn-crimson" onclick="startDrip()">⚡ 开始加票（1 张/秒）</button>
-            <button class="btn btn-gray" onclick="stopDrip()">⏹ 停止全部加票</button>
-            <span id="dripStatus" style="font-size:13px; color:#64748b;"></span>
-          </div>
+          <h2>5. 票数微调（按一下加 1 张）</h2>
+          <p style="font-size:13px; color:#64748b; margin-bottom:10px;">
+            点击选手右侧按钮即可实时增加 1 张观众票（仅后台可见已人工加票张数）。
+          </p>
+          <table>
+            <thead>
+              <tr>
+                <th>选手</th>
+                <th>当前总分</th>
+                <th>已后台加票</th>
+                <th>操作</th>
+              </tr>
+            </thead>
+            <tbody id="manualVoteTbody"></tbody>
+          </table>
         </div>
       </div>
 
@@ -340,6 +362,7 @@
     let allContestants = [];
     let currentSettings = {};
     let currentPublicState = {};
+    let manualCounts = {};
 
     document.getElementById('baseUrlInput').value = location.origin;
 
@@ -375,9 +398,10 @@
       document.getElementById('loginBox').style.display = 'none';
       document.getElementById('mainBox').style.display = 'block';
       const data = await api('/api/admin/config');
-      const { settings, publicState, activeDrips } = data;
+      const { settings, publicState } = data;
       currentSettings = settings;
       currentPublicState = publicState;
+      manualCounts = data.manualCounts || {};
       const { stats, leaderboard } = publicState;
 
       // 合并当前得分到 allContestants
@@ -397,10 +421,16 @@
       document.getElementById('top10Panel').style.display = mode === 'top10' ? 'block' : 'none';
       document.getElementById('thGroup').style.display = mode === 'top10' ? '' : 'none';
 
+      const isStandby = Boolean(settings.standbyMode);
+      const standbyBtn = document.getElementById('standbyBtn');
+      standbyBtn.textContent = isStandby ? '🎤 退出待机页（进入正式比赛）' : '🌙 切换至赛前待机页（隐藏选手）';
+      standbyBtn.className = `btn ${isStandby ? 'btn-green' : 'btn-crimson'}`;
+
       const statusMap = { open: '🟢 投票进行中', paused: '🟡 已暂停', ended: '🔴 已结束' };
       const modeText = mode === 'top10' ? '十佳定制模式' : '经典模式';
+      const standbyText = isStandby ? '🌙 赛前待机中 ｜ ' : '';
       document.getElementById('statusSummary').textContent =
-        `模式：${modeText} ｜ 状态：${statusMap[settings.votingStatus]} ｜ 第 ${settings.currentRound} 轮 ｜ 门票 ${stats.totalTickets} 张 ｜ 本轮观众 ${stats.totalAudienceVotes} 票 ｜ 导师 ${stats.totalJudgeVotes}/${stats.totalJudges}`;
+        `${standbyText}模式：${modeText} ｜ 状态：${statusMap[settings.votingStatus]} ｜ 第 ${settings.currentRound} 轮 ｜ 门票 ${stats.totalTickets} 张 ｜ 本轮观众 ${stats.totalAudienceVotes} 票 ｜ 导师 ${stats.totalJudgeVotes}/${stats.totalJudges}`;
 
       document.getElementById('cfgTitle').value = settings.title;
       document.getElementById('cfgRound').value = settings.currentRound;
@@ -410,10 +440,32 @@
       document.getElementById('cfgEndTime').value = settings.endTime || '';
       document.getElementById('cfgJudgeCodes').value = (settings.judgeCodes || []).join(',');
       document.getElementById('cfgAdminPwd').value = settings.adminPassword;
+      document.getElementById('cfgWelcomePopup').value = settings.welcomePopupText ?? '';
 
       renderContestants();
-      renderDripSelect(activeDrips || []);
+      renderManualVoteList();
       if (mode === 'top10') renderTop10Panel();
+    }
+
+    async function toggleStandbyMode() {
+      const next = !Boolean(currentSettings.standbyMode);
+      await api('/api/admin/settings', 'POST', { standbyMode: next });
+      loadDashboard();
+    }
+
+    async function saveWelcomePopup() {
+      const welcomePopupText = document.getElementById('cfgWelcomePopup').value;
+      await api('/api/admin/settings', 'POST', { welcomePopupText });
+      alert('首次进入弹窗内容已保存！');
+      loadDashboard();
+    }
+
+    async function broadcastPopup() {
+      const message = document.getElementById('broadcastPopupMsg').value.trim();
+      if (!message) return alert('请先输入弹窗内容');
+      const res = await api('/api/admin/popup/broadcast', 'POST', { message });
+      if (res.error) return alert(res.error);
+      alert('已向所有在线手机端发送弹窗！');
     }
 
     async function switchMode(mode) {
@@ -431,7 +483,7 @@
       await api('/api/admin/settings', 'POST', {
         activeGroup: groupNum,
         screenView: 'live',
-        votingStatus: groupNum > 0 ? 'open' : currentSettings.votingStatus
+        votingStatus: 'paused'
       });
       loadDashboard();
     }
@@ -480,10 +532,10 @@
 
         el.innerHTML = `
           <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:10px; padding:12px; margin-bottom:14px;">
-            <div style="font-weight:700; font-size:13.5px; margin-bottom:8px;">🎤 双人舞台逐组开票（唱完一组点一下对应组，观众即可立投该组）：</div>
+            <div style="font-weight:700; font-size:13.5px; margin-bottom:8px;">🎤 双人舞台逐组切换（点击组别仅同步投票页选手信息，需再手动点上方“立即开启投票”）：</div>
             <div class="row-actions" style="margin-top:0;">
               ${[1,2,3,4,5,6,7,8].map(g => `
-                <button class="btn ${activeGroup === g ? 'btn-crimson' : 'btn-outline'}" style="padding:7px 12px;" onclick="setActiveGroup(${g})">第 ${g} 组${activeGroup === g ? ' ●投票中' : ''}</button>
+                <button class="btn ${activeGroup === g ? 'btn-crimson' : 'btn-outline'}" style="padding:7px 12px;" onclick="setActiveGroup(${g})">第 ${g} 组${activeGroup === g ? ' ●已选中' : ''}</button>
               `).join('')}
               <button class="btn ${activeGroup === 0 ? 'btn-crimson' : 'btn-outline'}" style="padding:7px 12px;" onclick="setActiveGroup(0)">全部 16 人</button>
             </div>
@@ -663,33 +715,33 @@
       }
     }
 
-    function renderDripSelect(activeDrips) {
+    function renderManualVoteList() {
       const list = currentPublicState.leaderboard || allContestants;
-      const sel = document.getElementById('dripContestant');
-      const prevVal = sel.value;
-      sel.innerHTML = list.map(c => `<option value="${c.id}">${c.number}号 ${c.name || '(未命名)'}（当前 ${c.totalScore} 分）</option>`).join('');
-      if (prevVal) sel.value = prevVal;
-
-      const statusEl = document.getElementById('dripStatus');
-      if (activeDrips.length > 0) {
-        statusEl.textContent = `正在加票中（剩余 ${activeDrips.reduce((s, d) => s + d.remaining, 0)} 票）...`;
-      } else {
-        statusEl.textContent = '';
-      }
+      document.getElementById('manualVoteTbody').innerHTML = list.map(c => {
+        const added = manualCounts[c.id] || 0;
+        return `
+          <tr>
+            <td><strong>${c.number}号 ${c.name || '(未命名)'}</strong>${c.song ? ` 《${c.song}》` : ''}</td>
+            <td id="mv-score-${c.id}"><strong>${c.totalScore} 分</strong></td>
+            <td id="mv-added-${c.id}" style="color:#9B0D14; font-weight:700;">已后台加票：${added} 张</td>
+            <td>
+              <button class="btn btn-crimson" style="padding:6px 14px;" onclick="addManualVote(${c.id}, 1)">+1 票</button>
+            </td>
+          </tr>
+        `;
+      }).join('');
     }
 
-    async function startDrip() {
-      const contestantId = Number(document.getElementById('dripContestant').value);
-      const count = Number(document.getElementById('dripCount').value) || 1;
-      if (!contestantId) return alert('请选择选手');
-      const res = await api('/api/admin/drip/start', 'POST', { contestantId, count });
+    async function addManualVote(contestantId, delta = 1) {
+      const res = await api('/api/admin/manual-vote', 'POST', { contestantId, delta });
       if (res.error) return alert(res.error);
-      document.getElementById('dripStatus').textContent = `已启动：正在以 1 张/秒的速度增加 ${count} 票`;
-    }
-
-    async function stopDrip() {
-      await api('/api/admin/drip/stop', 'POST');
-      document.getElementById('dripStatus').textContent = '已停止加票';
+      manualCounts = res.manualCounts || manualCounts;
+      currentPublicState = res.state || currentPublicState;
+      const updated = (currentPublicState.leaderboard || []).find(c => c.id === contestantId);
+      const scoreEl = document.getElementById(`mv-score-${contestantId}`);
+      const addedEl = document.getElementById(`mv-added-${contestantId}`);
+      if (scoreEl && updated) scoreEl.innerHTML = `<strong>${updated.totalScore} 分</strong>`;
+      if (addedEl) addedEl.textContent = `已后台加票：${res.manualCount} 张`;
     }
 
     async function generateTickets() {

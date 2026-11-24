@@ -269,6 +269,85 @@
     }
     .tech-support { display: inline-flex; align-items: center; gap: 6px; font-size: 11.5px; letter-spacing: 0.6px; color: rgba(255, 240, 236, 0.42); }
     .tech-support img { height: 16px; width: auto; opacity: 0.8; vertical-align: middle; }
+
+    /* 赛前待机舞台页 */
+    #standbyStage {
+      display: none;
+      flex: 1;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 60px 24px;
+    }
+
+    .standby-panel {
+      padding: 56px 72px;
+      border-radius: 32px;
+      background: linear-gradient(135deg, rgba(255, 255, 255, 0.08), rgba(155, 13, 20, 0.16));
+      backdrop-filter: blur(26px) saturate(150%);
+      -webkit-backdrop-filter: blur(26px) saturate(150%);
+      border: 1px solid rgba(255, 255, 255, 0.14);
+      box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.2),
+        0 30px 70px rgba(0, 0, 0, 0.55),
+        0 0 60px rgba(155, 13, 20, 0.22);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 24px;
+    }
+
+    .standby-lockup {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 26px;
+    }
+
+    .standby-lockup img {
+      height: 68px;
+      width: auto;
+      filter: drop-shadow(0 4px 16px rgba(255, 255, 255, 0.16));
+    }
+
+    .standby-sep {
+      font-size: 38px;
+      font-weight: 200;
+      color: rgba(230, 194, 122, 0.75);
+    }
+
+    .standby-college {
+      font-size: 40px;
+      font-weight: 800;
+      letter-spacing: 6px;
+      background: linear-gradient(90deg, #FFFFFF 0%, #FFE4DF 65%, #E6C27A 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .standby-sub {
+      font-size: 15px;
+      letter-spacing: 4px;
+      color: rgba(243, 228, 225, 0.6);
+      text-transform: uppercase;
+    }
+
+    /* 奥运赛果式自上而下优雅浮入动画 */
+    @keyframes olympicEnter {
+      0% {
+        opacity: 0;
+        transform: translateY(-14px);
+      }
+      100% {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .olympic-in {
+      animation: olympicEnter 0.42s cubic-bezier(0.22, 1, 0.36, 1) both;
+    }
   </style>
 </head>
 <body>
@@ -279,7 +358,7 @@
   <div class="stage-grid"></div>
 
   <div class="shell">
-    <div class="top">
+    <div id="topHeader" class="top">
       <div class="brand">
         <img class="sdu-logo" src="/assets/sdu-logo-light.png" alt="Shandong University" />
         <div class="divider"></div>
@@ -292,6 +371,17 @@
         <div class="pill" id="roundInfo">第 1 轮</div>
         <div class="pill" id="statsInfo">已投 0 票</div>
         <div class="pill" id="statusPill">连接中</div>
+      </div>
+    </div>
+
+    <div id="standbyStage">
+      <div class="standby-panel">
+        <div class="standby-lockup">
+          <img src="/assets/sdu-logo-light.png" alt="Shandong University" />
+          <span class="standby-sep">｜</span>
+          <span class="standby-college">软件学院</span>
+        </div>
+        <div class="standby-sub">TOP 10 SINGERS COMPETITION · STANDBY</div>
       </div>
     </div>
 
@@ -500,13 +590,52 @@
       `;
     }
 
+    let lastViewSignature = '';
+
+    function applyOlympicEntrance(container) {
+      const items = container.querySelectorAll('.section-banner, .row, .duel-card, .standby-panel');
+      items.forEach((el, idx) => {
+        el.classList.remove('olympic-in');
+        el.style.animationDelay = '';
+        void el.offsetWidth;
+        el.style.animationDelay = `${idx * 45}ms`;
+        el.classList.add('olympic-in');
+        el.addEventListener('animationend', () => {
+          el.classList.remove('olympic-in');
+          el.style.animationDelay = '';
+        }, { once: true });
+      });
+    }
+
     function render(data) {
       const { settings, stats } = data;
-      document.getElementById('title').textContent = settings.title;
+      const topHeaderEl = document.getElementById('topHeader');
+      const standbyStageEl = document.getElementById('standbyStage');
+      const container = document.getElementById('stageContent');
 
       const isTop10 = settings.mode === 'top10';
       const roundNum = Number(settings.currentRound);
       const activeGroup = Number(settings.activeGroup) || 0;
+      const isStandby = Boolean(settings.standbyMode);
+      const view = isTop10 && roundNum === 1 ? (settings.screenView || 'live') : 'live';
+      const viewSignature = `${isStandby}|${view}|${roundNum}|${activeGroup}`;
+      const viewChanged = viewSignature !== lastViewSignature;
+      lastViewSignature = viewSignature;
+
+      if (isStandby) {
+        topHeaderEl.style.display = 'none';
+        container.style.display = 'none';
+        standbyStageEl.style.display = 'flex';
+        if (viewChanged) applyOlympicEntrance(standbyStageEl);
+        return;
+      }
+
+      topHeaderEl.style.display = 'flex';
+      container.style.display = 'flex';
+      standbyStageEl.style.display = 'none';
+
+      document.getElementById('title').textContent = settings.title;
+
       let roundLabel = `第 ${roundNum} 轮`;
       if (isTop10) {
         if (roundNum === 1) {
@@ -522,11 +651,13 @@
       statusPill.textContent = map[settings.votingStatus] || settings.votingStatus;
       statusPill.className = `pill ${settings.votingStatus}`;
 
-      const container = document.getElementById('stageContent');
-      const view = isTop10 && roundNum === 1 ? (settings.screenView || 'live') : 'live';
       if (view === 'r1-groups') renderR1GroupsView(container, data);
       else if (view === 'r1-duels') renderR1DuelsView(container, data);
       else renderLiveBoard(container, data);
+
+      if (viewChanged) {
+        applyOlympicEntrance(container);
+      }
     }
 
     function connectWS() {

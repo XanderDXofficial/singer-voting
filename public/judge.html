@@ -186,7 +186,6 @@
     }
 
     .name { font-size: 16px; font-weight: 700; color: #FFFFFF; }
-    .song { font-size: 13px; color: rgba(243, 228, 225, 0.65); margin-top: 3px; }
 
     .status-tag {
       font-size: 13px;
@@ -199,6 +198,50 @@
       color: #FDE68A;
       text-shadow: 0 0 12px rgba(230, 194, 122, 0.5);
     }
+
+    /* 赛前待机页面 */
+    #standbyView {
+      display: none;
+      min-height: calc(100vh - 140px);
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 40px 20px;
+    }
+
+    .standby-card {
+      padding: 36px 26px;
+      border-radius: 24px;
+      background: linear-gradient(135deg, rgba(255, 255, 255, 0.08), rgba(155, 13, 20, 0.16));
+      backdrop-filter: blur(22px);
+      -webkit-backdrop-filter: blur(22px);
+      border: 1px solid rgba(255, 255, 255, 0.14);
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.18), 0 20px 50px rgba(0, 0, 0, 0.45);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 18px;
+      width: 100%;
+    }
+
+    .standby-lockup {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 14px;
+      flex-wrap: wrap;
+    }
+
+    .standby-lockup img {
+      height: 34px;
+      width: auto;
+      filter: drop-shadow(0 2px 10px rgba(255, 255, 255, 0.14));
+    }
+
+    .standby-sep { font-size: 20px; font-weight: 300; color: rgba(230, 194, 122, 0.7); }
+    .standby-college { font-size: 21px; font-weight: 700; letter-spacing: 3px; color: #FFF6F4; }
+    .standby-sub { font-size: 13px; color: rgba(243, 228, 225, 0.65); letter-spacing: 1px; }
 
     .page-footer {
       margin-top: 28px;
@@ -233,32 +276,62 @@
       margin-top: 4px;
     }
 
-    .tech-support img {
-      height: 15px;
-      width: auto;
-      opacity: 0.78;
-    }
+    .tech-support img { height: 15px; width: auto; opacity: 0.78; }
 
+    /* 5 秒纯 CSS 黑底开屏动画 */
     #introSplash {
       position: fixed;
       inset: 0;
       z-index: 9999;
-      background: #000;
+      background: #000000;
       display: flex;
       align-items: center;
       justify-content: center;
       transition: opacity 0.45s ease;
     }
 
-    #introSplash.hide {
-      opacity: 0;
-      pointer-events: none;
+    #introSplash.hide { opacity: 0; pointer-events: none; }
+
+    .splash-stage {
+      position: relative;
+      width: 100%;
+      height: 140px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
     }
 
-    #introVideo {
-      width: 100%;
-      height: 100%;
-      object-fit: contain;
+    .splash-text {
+      position: absolute;
+      font-size: 20px;
+      font-weight: 300;
+      letter-spacing: 4px;
+      color: rgba(255, 255, 255, 0.92);
+      opacity: 0;
+      animation: splashTextSeq 2.2s ease both;
+    }
+
+    .splash-logo {
+      position: absolute;
+      width: 210px;
+      max-width: 62vw;
+      height: auto;
+      opacity: 0;
+      animation: splashLogoSeq 2.7s ease 2.25s both;
+    }
+
+    @keyframes splashTextSeq {
+      0% { opacity: 0; transform: translateY(10px); }
+      32% { opacity: 1; transform: translateY(0); }
+      72% { opacity: 1; transform: translateY(0); }
+      100% { opacity: 0; transform: translateY(-8px); }
+    }
+
+    @keyframes splashLogoSeq {
+      0% { opacity: 0; transform: scale(0.92); }
+      30% { opacity: 1; transform: scale(1); }
+      74% { opacity: 1; transform: scale(1); }
+      100% { opacity: 0; transform: scale(1.03); }
     }
 
     .skip-btn {
@@ -275,6 +348,52 @@
       font-weight: 600;
       padding: 6px 14px;
       border-radius: 999px;
+      cursor: pointer;
+    }
+
+    #popupModal {
+      position: fixed;
+      inset: 0;
+      z-index: 9500;
+      background: rgba(6, 2, 4, 0.72);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+    }
+
+    #popupModal.show { display: flex; }
+
+    .modal-card {
+      width: 100%;
+      max-width: 400px;
+      background: linear-gradient(135deg, rgba(38, 12, 18, 0.92), rgba(18, 6, 9, 0.95));
+      border: 1px solid rgba(230, 194, 122, 0.38);
+      border-radius: 22px;
+      padding: 26px 22px 20px;
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.18), 0 24px 60px rgba(0, 0, 0, 0.65);
+      text-align: center;
+      animation: modalPop 0.28s cubic-bezier(0.22, 1, 0.36, 1) both;
+    }
+
+    @keyframes modalPop {
+      from { opacity: 0; transform: scale(0.93) translateY(8px); }
+      to { opacity: 1; transform: scale(1) translateY(0); }
+    }
+
+    .modal-body { font-size: 15.5px; line-height: 1.65; color: #FFF4F2; white-space: pre-line; margin-bottom: 22px; }
+
+    .modal-btn {
+      width: 100%;
+      padding: 12px;
+      border-radius: 12px;
+      border: 1px solid rgba(255, 240, 200, 0.5);
+      background: linear-gradient(90deg, #B88428 0%, #E6C27A 55%, #D99B38 100%);
+      color: #24090B;
+      font-size: 15.5px;
+      font-weight: 800;
       cursor: pointer;
     }
 
@@ -318,26 +437,49 @@
 </head>
 <body>
   <div id="introSplash">
-    <video id="introVideo" src="/assets/dx-intro.mp4" autoplay muted playsinline webkit-playsinline preload="auto"></video>
+    <div class="splash-stage">
+      <div class="splash-text">Designed by</div>
+      <img class="splash-logo" src="/assets/dx-mark.png" alt="D.X." />
+    </div>
     <button id="skipSplashBtn" class="skip-btn" type="button">跳过</button>
+  </div>
+
+  <div id="popupModal">
+    <div class="modal-card">
+      <div id="popupBody" class="modal-body"></div>
+      <button id="popupConfirmBtn" class="modal-btn" type="button">好</button>
+    </div>
   </div>
 
   <div class="stage-bg"></div>
   <div class="stage-grid"></div>
 
   <div class="container">
-    <div class="header">
-      <div class="eyebrow">SCHOOL OF SOFTWARE · VIP JURY</div>
-      <h1 id="title">导师专属投票通道</h1>
-      <div class="badge" id="weightBadge">加载中...</div>
+    <div id="standbyView">
+      <div class="standby-card">
+        <div class="standby-lockup">
+          <img src="/assets/sdu-logo-light.png" alt="Shandong University" />
+          <span class="standby-sep">｜</span>
+          <span class="standby-college">软件学院</span>
+        </div>
+        <div class="standby-sub">比赛即将开始 · 敬请期待</div>
+      </div>
     </div>
 
-    <div class="box">
-      <label>导师专属口令（默认 J1 / J2 / J3，扫码自动填入）</label>
-      <input id="judgeCode" type="text" placeholder="例如：J1" />
-    </div>
+    <div id="votingView">
+      <div class="header">
+        <div class="eyebrow">SCHOOL OF SOFTWARE · VIP JURY</div>
+        <h1 id="title">导师专属投票通道</h1>
+        <div class="badge" id="weightBadge">加载中...</div>
+      </div>
 
-    <div id="list" class="list"></div>
+      <div class="box">
+        <label>导师专属口令（默认 J1 / J2 / J3，扫码自动填入）</label>
+        <input id="judgeCode" type="text" placeholder="例如：J1" />
+      </div>
+
+      <div id="list" class="list"></div>
+    </div>
 
     <div class="page-footer">
       <img src="/assets/sdu-logo-light.png" alt="Shandong University" />
@@ -349,7 +491,7 @@
     </div>
   </div>
 
-  <div class="footer">
+  <div id="bottomDock" class="footer">
     <button id="submitBtn" class="btn">提交导师加权票</button>
   </div>
 
@@ -361,10 +503,49 @@
 
     let appState = null;
     const selectedIds = new Set();
+    let splashFinished = false;
+    let welcomeChecked = false;
+
+    const standbyViewEl = document.getElementById('standbyView');
+    const votingViewEl = document.getElementById('votingView');
+    const bottomDockEl = document.getElementById('bottomDock');
+    const popupModalEl = document.getElementById('popupModal');
+    const popupBodyEl = document.getElementById('popupBody');
+
+    function openPopup(text, onConfirm) {
+      if (!text) return;
+      popupBodyEl.textContent = text;
+      popupModalEl.classList.add('show');
+      document.getElementById('popupConfirmBtn').onclick = () => {
+        popupModalEl.classList.remove('show');
+        if (onConfirm) onConfirm();
+      };
+    }
+
+    function maybeShowWelcomePopup() {
+      if (!splashFinished || welcomeChecked || !appState) return;
+      welcomeChecked = true;
+      const msg = (appState.settings.welcomePopupText || '').trim();
+      if (msg && !localStorage.getItem('dx_welcome_seen')) {
+        openPopup(msg, () => localStorage.setItem('dx_welcome_seen', '1'));
+      }
+    }
 
     function render() {
       if (!appState) return;
       const { settings, leaderboard } = appState;
+
+      if (settings.standbyMode) {
+        standbyViewEl.style.display = 'flex';
+        votingViewEl.style.display = 'none';
+        bottomDockEl.style.display = 'none';
+        return;
+      }
+
+      standbyViewEl.style.display = 'none';
+      votingViewEl.style.display = 'block';
+      bottomDockEl.style.display = 'block';
+
       document.getElementById('title').textContent = `${settings.title} · 导师席`;
       const statusText = settings.votingStatus === 'open' ? '🟢 通道已开启' : (settings.votingStatus === 'paused' ? '🟡 已暂停' : '🔴 已结束');
       const groupPrefix = settings.mode === 'top10' && Number(settings.currentRound) === 1 && Number(settings.activeGroup) > 0
@@ -392,6 +573,7 @@
       const res = await fetch('/api/state');
       appState = await res.json();
       render();
+      maybeShowWelcomePopup();
     }
 
     function connectWS() {
@@ -399,6 +581,10 @@
       const ws = new WebSocket(`${proto}//${location.host}`);
       ws.onmessage = (e) => {
         const msg = JSON.parse(e.data);
+        if (msg.type === 'POPUP_BROADCAST' && msg.data?.message) {
+          openPopup(msg.data.message);
+          return;
+        }
         if (msg.type === 'STATE_UPDATE') {
           appState = msg.data;
           render();
@@ -428,36 +614,28 @@
       alert('导师加权投票成功！大屏幕已实时更新。');
     };
 
-    // 开屏动画逻辑
     (function setupSplash() {
       const splash = document.getElementById('introSplash');
-      const video = document.getElementById('introVideo');
       const skipBtn = document.getElementById('skipSplashBtn');
-      if (!splash || !video) return;
+      if (!splash) {
+        splashFinished = true;
+        return;
+      }
 
       let dismissed = false;
       function dismissSplash() {
         if (dismissed) return;
         dismissed = true;
         splash.classList.add('hide');
-        setTimeout(() => splash.remove(), 460);
+        setTimeout(() => {
+          splash.remove();
+          splashFinished = true;
+          maybeShowWelcomePopup();
+        }, 460);
       }
 
-      video.addEventListener('ended', dismissSplash);
-      video.addEventListener('error', dismissSplash);
       skipBtn.addEventListener('click', dismissSplash);
-      splash.addEventListener('click', (e) => {
-        if (e.target === skipBtn) return;
-        if (video.paused) dismissSplash();
-      });
-
-      const playPromise = video.play();
-      if (playPromise && typeof playPromise.catch === 'function') {
-        playPromise.catch(() => {
-          setTimeout(dismissSplash, 2500);
-        });
-      }
-      setTimeout(dismissSplash, 12000);
+      setTimeout(dismissSplash, 5000);
     })();
 
     init();
