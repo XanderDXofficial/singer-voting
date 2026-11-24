@@ -293,6 +293,19 @@ function getManualCounts() {
   return counts;
 }
 
+// 操作历史栈（支持最多 20 步一键回退，防止误操作）
+const MAX_HISTORY = 20;
+const stateHistory = [];
+function pushHistory(label) {
+  stateHistory.push({
+    label,
+    snapshot: JSON.parse(JSON.stringify(state))
+  });
+  if (stateHistory.length > MAX_HISTORY) {
+    stateHistory.shift();
+  }
+}
+
 // 简单的管理员鉴权中间件
 const adminTokens = new Set();
 function requireAdmin(req, res, next) {
@@ -319,18 +332,38 @@ app.get('/api/state', (req, res) => {
   res.json(getPublicState());
 });
 
-// 获取完整后台配置（含导师口令、全部选手及后台加票统计）
+// 获取完整后台配置（含导师口令、全部选手、后台加票统计及撤销栈信息）
 app.get('/api/admin/config', requireAdmin, (req, res) => {
   res.json({
     settings: state.settings,
     allContestants: state.contestants,
     manualCounts: getManualCounts(),
+    historyCount: stateHistory.length,
+    lastActionLabel: stateHistory.length ? stateHistory[stateHistory.length - 1].label : '',
     publicState: getPublicState()
+  });
+});
+
+// 撤销上一步后台操作
+app.post('/api/admin/undo', requireAdmin, (req, res) => {
+  if (stateHistory.length === 0) {
+    return res.status(400).json({ error: '没有可撤销的操作' });
+  }
+  const { label, snapshot } = stateHistory.pop();
+  state = snapshot;
+  saveState();
+  broadcastState();
+  res.json({
+    ok: true,
+    undoneLabel: label,
+    historyCount: stateHistory.length,
+    state: getPublicState()
   });
 });
 
 // 更新设置
 app.post('/api/admin/settings', requireAdmin, (req, res) => {
+  pushHistory('修改设置/状态');
   const allowed = [
     'title',
     'mode',
@@ -364,6 +397,7 @@ app.post('/api/admin/contestants', requireAdmin, (req, res) => {
   if (!Array.isArray(contestants)) {
     return res.status(400).json({ error: '选手数据格式错误' });
   }
+  pushHistory('保存选手列表');
   state.contestants = contestants.map((c, idx) => ({
     id: Number(c.id) || Date.now() + idx,
     number: String(c.number || idx + 1).padStart(2, '0'),
@@ -378,6 +412,7 @@ app.post('/api/admin/contestants', requireAdmin, (req, res) => {
 
 // 十佳定制模式：初始化16位空白选手（8组两人配对）
 app.post('/api/admin/top10/init-16', requireAdmin, (req, res) => {
+  pushHistory('初始化16位选手');
   state.contestants = Array.from({ length: 16 }, (_, i) => ({
     id: i + 1,
     number: String(i + 1).padStart(2, '0'),
@@ -403,6 +438,7 @@ app.post('/api/admin/top10/advance', requireAdmin, (req, res) => {
   if (!nextRound || qualifiedIds.length === 0) {
     return res.status(400).json({ error: '请选择晋级选手与目标轮次' });
   }
+  pushHistory(`晋级第 ${nextRound} 轮`);
   state.settings.mode = 'top10';
   state.settings.currentRound = nextRound;
   state.settings.activeGroup = 0;
@@ -428,6 +464,7 @@ app.post('/api/admin/archive/import', requireAdmin, (req, res) => {
   if (!incoming || !incoming.settings || !Array.isArray(incoming.contestants)) {
     return res.status(400).json({ error: '无效的项目存档文件格式' });
   }
+  pushHistory('导入项目存档');
   const def = createDefaultState();
   state = {
     ...def,
@@ -449,6 +486,7 @@ app.post('/api/admin/manual-vote', requireAdmin, (req, res) => {
   if (!state.contestants.some(c => c.id === contestantId) || isNaN(delta)) {
     return res.status(400).json({ error: '无效的选手或票数参数' });
   }
+  pushHistory('后台加票');
   const bucketKey = getVoteBucketKey();
   if (!state.manualVotes[bucketKey]) state.manualVotes[bucketKey] = {};
   const nextVal = Math.max(0, (state.manualVotes[bucketKey][contestantId] || 0) + delta);
@@ -531,6 +569,7 @@ app.get('/api/admin/judges/qr', requireAdmin, async (req, res) => {
 app.post('/api/admin/reset', requireAdmin, (req, res) => {
   const { type } = req.body; // 'round' | 'tickets'
   const bucketKeys = getRoundBucketKeys();
+  pushHistory(type === 'round' ? '清空当前轮次票数' : '清空所有门票码');
   if (type === 'round') {
     Object.values(state.tickets).forEach(t => {
       if (t.votedRounds) {

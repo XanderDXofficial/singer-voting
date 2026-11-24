@@ -327,7 +327,7 @@
       letter-spacing: 4px;
       color: rgba(255, 255, 255, 0.92);
       opacity: 0;
-      animation: splashTextSeq 1.3s ease both;
+      animation: splashTextSeq 2.5s ease both;
     }
 
     .splash-logo {
@@ -336,7 +336,7 @@
       max-width: 62vw;
       height: auto;
       opacity: 0;
-      animation: splashLogoSeq 1.6s ease 1.35s both;
+      animation: splashLogoSeq 1.5s ease 2.55s both;
     }
 
     @keyframes splashTextSeq {
@@ -553,8 +553,9 @@
       if (!splashFinished || welcomeChecked || !appState) return;
       welcomeChecked = true;
       const msg = (appState.settings.welcomePopupText || '').trim();
-      if (msg && !localStorage.getItem('dx_welcome_seen')) {
-        openPopup(msg, () => localStorage.setItem('dx_welcome_seen', '1'));
+      const welcomeKey = 'dx_welcome_seen_' + encodeURIComponent(msg).slice(0, 40) + '_' + msg.length;
+      if (msg && !localStorage.getItem(welcomeKey)) {
+        openPopup(msg, () => localStorage.setItem(welcomeKey, '1'));
       }
     }
 
@@ -640,6 +641,7 @@
         if (msg.type === 'STATE_UPDATE') {
           appState = msg.data;
           render();
+          maybeShowWelcomePopup();
         }
       };
       ws.onclose = () => setTimeout(connectWS, 2000);
@@ -687,7 +689,7 @@
       }
 
       skipBtn.addEventListener('click', dismissSplash);
-      setTimeout(dismissSplash, 3000);
+      setTimeout(dismissSplash, 4050);
     })();
 
     init();

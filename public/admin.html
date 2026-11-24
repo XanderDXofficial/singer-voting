@@ -202,6 +202,7 @@
             <button class="btn btn-green" onclick="setStatus('open')">▶ 立即开启投票</button>
             <button class="btn btn-amber" onclick="setStatus('paused')">⏸ 暂停投票</button>
             <button class="btn btn-red" onclick="setStatus('ended')">⏹ 结束本轮投票</button>
+            <button id="undoBtn" class="btn btn-outline" onclick="undoLastAction()" disabled>↩ 撤销上一步</button>
             <a href="/screen.html" target="_blank"><button class="btn btn-gray" type="button">📺 打开大屏幕榜单</button></a>
             <a href="/judge.html" target="_blank"><button class="btn btn-gray" type="button">🎓 打开导师投票页</button></a>
           </div>
@@ -426,6 +427,12 @@
       standbyBtn.textContent = isStandby ? '🎤 退出待机页（进入正式比赛）' : '🌙 切换至赛前待机页（隐藏选手）';
       standbyBtn.className = `btn ${isStandby ? 'btn-green' : 'btn-crimson'}`;
 
+      const undoBtn = document.getElementById('undoBtn');
+      const hCount = Number(data.historyCount) || 0;
+      const lastLabel = data.lastActionLabel || '';
+      undoBtn.disabled = hCount === 0;
+      undoBtn.textContent = hCount > 0 ? `↩ 撤销「${lastLabel}」（余 ${hCount} 步）` : '↩ 撤销上一步';
+
       const statusMap = { open: '🟢 投票进行中', paused: '🟡 已暂停', ended: '🔴 已结束' };
       const modeText = mode === 'top10' ? '十佳定制模式' : '经典模式';
       const standbyText = isStandby ? '🌙 赛前待机中 ｜ ' : '';
@@ -450,6 +457,14 @@
     async function toggleStandbyMode() {
       const next = !Boolean(currentSettings.standbyMode);
       await api('/api/admin/settings', 'POST', { standbyMode: next });
+      loadDashboard();
+    }
+
+    async function undoLastAction() {
+      if (!confirm('确定要撤销上一步后台操作并恢复之前的数据状态吗？')) return;
+      const res = await api('/api/admin/undo', 'POST');
+      if (res.error) return alert(res.error);
+      alert(`已成功撤销：${res.undoneLabel}`);
       loadDashboard();
     }
 
