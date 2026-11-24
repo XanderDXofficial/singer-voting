@@ -137,7 +137,26 @@
       box-shadow: 0 0 0 3px rgba(230, 194, 122, 0.2);
     }
 
-    .list { display: flex; flex-direction: column; gap: 11px; }
+    .list {
+      display: flex;
+      flex-direction: column;
+      gap: 11px;
+      transition: opacity 0.18s ease, transform 0.18s ease;
+    }
+
+    .list.list-fade-out {
+      opacity: 0;
+      transform: translateY(-4px);
+    }
+
+    @keyframes cardFloatIn {
+      0% { opacity: 0; transform: translateY(10px); }
+      100% { opacity: 1; transform: translateY(0); }
+    }
+
+    .card.card-enter {
+      animation: cardFloatIn 0.36s cubic-bezier(0.22, 1, 0.36, 1) both;
+    }
 
     .card {
       background: linear-gradient(135deg, rgba(255, 255, 255, 0.07), rgba(255, 255, 255, 0.025));
@@ -389,14 +408,14 @@
       width: 100%;
       padding: 12px;
       border-radius: 12px;
-      border: 1px solid rgba(255, 255, 255, 0.2);
-      background: linear-gradient(180deg, #A81018 0%, #860B11 100%);
-      color: #FFFFFF;
+      border: 1px solid rgba(255, 255, 255, 0.16);
+      background: linear-gradient(180deg, rgba(138, 16, 24, 0.88) 0%, rgba(102, 10, 16, 0.94) 100%);
+      color: #F8EDEC;
       font-size: 15.5px;
-      font-weight: 800;
+      font-weight: 700;
       letter-spacing: 1px;
       cursor: pointer;
-      box-shadow: 0 6px 20px rgba(155, 13, 20, 0.42), inset 0 1px 0 rgba(255, 255, 255, 0.2);
+      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.14);
     }
 
     .song {
@@ -561,10 +580,34 @@
         : '';
       document.getElementById('weightBadge').textContent = `第 ${settings.currentRound} 轮 · ${groupPrefix}${statusText} · 导师 1 票 = ${settings.judgeWeight} 观众票`;
 
-      document.getElementById('list').innerHTML = leaderboard.map(c => {
+      const listEl = document.getElementById('list');
+      const nextListSig = `${settings.currentRound}|${settings.activeGroup}|${leaderboard.map(c => c.id).join(',')}`;
+      const listChanged = nextListSig !== lastListSignature;
+      const hadPrevList = lastListSignature !== '';
+      lastListSignature = nextListSig;
+
+      if (listChanged && hadPrevList) {
+        if (listSwitchTimer) clearTimeout(listSwitchTimer);
+        listEl.classList.add('list-fade-out');
+        listSwitchTimer = setTimeout(() => {
+          listSwitchTimer = null;
+          listEl.classList.remove('list-fade-out');
+          renderCards(appState.leaderboard, true);
+        }, 180);
+      } else if (!listSwitchTimer) {
+        renderCards(leaderboard, listChanged);
+      }
+    }
+
+    let lastListSignature = '';
+    let listSwitchTimer = null;
+
+    function renderCards(leaderboard, animate) {
+      document.getElementById('list').innerHTML = leaderboard.map((c, idx) => {
         const songText = c.song ? `《${c.song}》` : '';
+        const animStyle = animate ? `style="animation-delay:${idx * 45}ms"` : '';
         return `
-          <div class="card ${selectedIds.has(c.id) ? 'selected' : ''}" onclick="toggle(${c.id})">
+          <div class="card ${selectedIds.has(c.id) ? 'selected' : ''} ${animate ? 'card-enter' : ''}" ${animStyle} onclick="toggle(${c.id})">
             <div class="card-left">
               <div class="num">${c.number}</div>
               <div>

@@ -237,10 +237,12 @@
       box-shadow: 0 0 16px rgba(225, 29, 72, 0.55);
     }
     .row.rank-1 .bar { background: linear-gradient(90deg, #B8111A 0%, #E6C27A 70%, #FFF1C2 100%); box-shadow: 0 0 22px rgba(230, 194, 122, 0.65); }
+    .row.rank-2 .bar { background: linear-gradient(90deg, #94A3B8 0%, #E2E8F0 70%, #FFFFFF 100%); box-shadow: 0 0 18px rgba(226, 232, 240, 0.45); }
 
     .score-box { text-align: right; font-variant-numeric: tabular-nums; }
     .total { font-size: 23px; font-weight: 800; color: #FFFFFF; }
     .row.rank-1 .total { color: #FDE68A; text-shadow: 0 0 20px rgba(230, 194, 122, 0.45); }
+    .row.rank-2 .total { color: #F1F5F9; text-shadow: 0 0 16px rgba(226, 232, 240, 0.35); }
     .detail { font-size: 12px; color: rgba(241, 226, 224, 0.72); margin-top: 2px; }
 
     /* 两页结果展示视图 */
@@ -256,54 +258,94 @@
     .groups-grid {
       display: grid;
       grid-template-columns: repeat(2, minmax(0, 1fr));
-      gap: 12px 16px;
-      align-content: start;
+      grid-template-rows: repeat(4, minmax(0, 1fr));
+      gap: 14px 18px;
+      align-content: stretch;
       flex: 1;
+      min-height: 0;
     }
 
     .groups-grid .row {
-      grid-template-columns: 56px minmax(0, 1.4fr) minmax(70px, 0.8fr) 150px;
-      gap: 12px;
-      padding: 12px 16px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      align-items: stretch;
+      gap: 8px;
+      padding: 14px 20px;
+      height: 100%;
     }
-    .groups-grid .rank { width: 50px; height: 38px; font-size: 14.5px; }
-    .groups-grid .total { font-size: 20px; }
+    .groups-grid .group-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+    }
+    .groups-grid .group-top-left {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      min-width: 0;
+    }
+    .groups-grid .rank { width: 52px; height: 34px; margin: 0; font-size: 14px; flex-shrink: 0; }
+    .groups-grid .total { font-size: 22px; flex-shrink: 0; }
+    .groups-grid .group-members {
+      font-size: 14.5px;
+      font-weight: 600;
+      color: rgba(255, 244, 242, 0.9);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .groups-grid .group-bottom {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+    .groups-grid .bar-wrap { flex: 1; height: 14px; }
+    .groups-grid .detail { margin-top: 0; flex-shrink: 0; font-size: 12.5px; }
 
     .group-badge-win {
       display: inline-block; padding: 3px 10px; border-radius: 999px; font-size: 12px; font-weight: 700;
-      background: linear-gradient(90deg, #FCE3A6, #D4A145); color: #2A0A0D; margin-left: 6px;
+      background: linear-gradient(90deg, #FCE3A6, #D4A145); color: #2A0A0D;
+    }
+    .group-badge-win.silver {
+      background: linear-gradient(90deg, #F8FAFC, #CBD5E1); color: #0F172A;
     }
     .group-badge-duel {
       display: inline-block; padding: 3px 10px; border-radius: 999px; font-size: 12px; font-weight: 600;
-      background: rgba(255,255,255,0.1); color: #cbd5e1; margin-left: 6px;
+      background: rgba(255,255,255,0.1); color: #cbd5e1;
     }
 
     .duel-grid {
       display: grid;
       grid-template-columns: repeat(3, minmax(0, 1fr));
-      gap: 14px;
-      align-content: start;
+      grid-template-rows: repeat(2, minmax(0, 1fr));
+      gap: 18px;
+      align-content: stretch;
       flex: 1;
+      min-height: 0;
     }
     .duel-card {
       background: linear-gradient(135deg, rgba(255, 255, 255, 0.065), rgba(255, 255, 255, 0.025));
       backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
       border: 1px solid rgba(255, 255, 255, 0.12);
-      border-radius: 16px;
-      padding: 13px 15px;
-      display: flex; flex-direction: column; gap: 10px;
+      border-radius: 18px;
+      padding: 18px 20px;
+      display: flex; flex-direction: column; justify-content: space-between; gap: 12px;
       box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.12), 0 10px 26px rgba(0, 0, 0, 0.32);
       will-change: transform;
+      height: 100%;
     }
     .duel-header {
       display: flex; justify-content: space-between; align-items: center;
-      font-size: 13.5px; font-weight: 700; color: var(--sdu-gold);
-      border-bottom: 1px solid rgba(255, 255, 255, 0.1); padding-bottom: 6px;
+      font-size: 14.5px; font-weight: 700; color: var(--sdu-gold);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1); padding-bottom: 8px;
+      flex-shrink: 0;
     }
-    .duel-fighters { display: flex; flex-direction: column; gap: 8px; }
+    .duel-fighters { display: flex; flex-direction: column; justify-content: center; gap: 12px; flex: 1; }
     .duel-fighter {
       display: flex; justify-content: space-between; align-items: center;
-      padding: 11px 12px; border-radius: 12px;
+      padding: 16px 16px; border-radius: 14px; flex: 1;
       transition: opacity 0.3s ease, filter 0.3s ease, border-color 0.3s ease;
       will-change: transform;
     }
@@ -603,34 +645,41 @@
 
       groupList.forEach((g, idx) => {
         const rankNum = idx + 1;
+        const isFirst = idx === 0;
+        const isSecond = idx === 1;
         const isTop2 = idx < 2;
         const pct = g.total === 0 ? 0 : Math.max(4, Math.round((g.total / maxTotal) * 100));
-        const names = g.members.map(m => `${m.number}号 ${m.name || '待定'}${m.song ? `《${m.song}》` : ''}`).join(' & ');
+        const names = g.members.map(m => `${m.number}号 ${m.name || '待定'}${m.song ? `《${m.song}》` : ''}`).join('  &  ');
 
         let row = groupRowMap.get(g.group);
         if (!row) {
           row = document.createElement('div');
           row.className = 'row';
           row.innerHTML = `
-            <div class="rank"></div>
-            <div class="info">
-              <div class="name"></div>
-              <div class="song" style="margin-top:4px; color:rgba(255,240,236,0.78); font-size:12.5px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;"></div>
+            <div class="group-top">
+              <div class="group-top-left">
+                <div class="rank"></div>
+                <div class="name"></div>
+              </div>
+              <div class="total"></div>
             </div>
-            <div class="bar-wrap"><div class="bar"></div></div>
-            <div class="score-box"><div class="total"></div><div class="detail"></div></div>
+            <div class="group-members"></div>
+            <div class="group-bottom">
+              <div class="bar-wrap"><div class="bar"></div></div>
+              <div class="detail"></div>
+            </div>
           `;
           groupRowMap.set(g.group, row);
         }
 
-        row.className = `row ${isTop2 ? 'rank-1' : ''}`;
-        row.style.opacity = isTop2 ? '1' : '0.88';
+        row.className = `row ${isFirst ? 'rank-1' : (isSecond ? 'rank-2' : '')}`;
+        row.style.opacity = isTop2 ? '1' : '0.9';
         row.querySelector('.rank').textContent = formatOrdinal(rankNum);
-        row.querySelector('.info .name').innerHTML = `
+        row.querySelector('.name').innerHTML = `
           <span class="num-tag">第 ${g.group} 组</span>
-          ${isTop2 ? '<span class="group-badge-win">✅ 直通晋级</span>' : '<span class="group-badge-duel">组内二选一</span>'}
+          ${isFirst ? '<span class="group-badge-win">✅ 直通晋级</span>' : (isSecond ? '<span class="group-badge-win silver">✅ 直通晋级</span>' : '<span class="group-badge-duel">组内二选一</span>')}
         `;
-        row.querySelector('.info .song').textContent = names;
+        row.querySelector('.group-members').textContent = names;
         row.querySelector('.bar').style.width = `${pct}%`;
         row.querySelector('.total').textContent = `${g.total} 分`;
         row.querySelector('.detail').textContent = g.members.map(m => `${m.number}号:${m.totalScore}`).join(' + ');
