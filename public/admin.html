@@ -128,33 +128,29 @@
       width: auto;
     }
 
-    .qr-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-      gap: 12px;
     .qr-pages {
       margin-top: 16px;
     }
     .qr-page {
       display: grid;
       grid-template-columns: repeat(4, 1fr);
-      gap: 10px;
-      margin-bottom: 18px;
+      gap: 12px;
+      margin-bottom: 20px;
     }
     .qr-item {
       border: 1px dashed #cbd5e1;
-      padding: 8px 6px;
+      padding: 10px;
       text-align: center;
       border-radius: 8px;
       background: #fff;
       page-break-inside: avoid;
       break-inside: avoid;
     }
-    .qr-item img { width: 112px; height: 112px; display: block; margin: 0 auto; }
-    .qr-item .code { font-weight: 700; font-size: 12.5px; margin-top: 4px; }
+    .qr-item img { width: 120px; height: 120px; display: block; margin: 0 auto; }
+    .qr-item .code { font-weight: 700; font-size: 13px; margin-top: 4px; }
     @page {
       size: A4 portrait;
-      margin: 10mm;
+      margin: 0;
     }
     @media print {
       body { background: #fff; padding: 0; margin: 0; }
@@ -163,10 +159,11 @@
       .card { box-shadow: none; padding: 0; margin: 0; border-radius: 0; }
       .qr-pages { margin-top: 0; }
       .qr-page {
+        padding: 12mm;
+        gap: 12px;
         page-break-after: always;
         break-after: page;
         margin-bottom: 0;
-        gap: 8px;
       }
       .qr-page:last-child {
         page-break-after: auto;
