@@ -18,9 +18,52 @@ if (!fs.existsSync(DATA_DIR)) {
   fs.mkdirSync(DATA_DIR, { recursive: true });
 }
 
+const FIXED_TICKET_COUNT = 300;
+const DEFAULT_JUDGE_CODES = ['J1', 'J2', 'J3', 'J4', 'J5'];
+
+// 确定性生成 300 个永久固定门票码（重启/重部署永不失效）
+function buildFixedTickets(count = FIXED_TICKET_COUNT) {
+  const fixed = {};
+  for (let i = 1; i <= count; i++) {
+    const code = crypto
+      .createHash('sha256')
+      .update(`SDU-SW-TOP10-2026-TICKET-${String(i).padStart(3, '0')}`)
+      .digest('hex')
+      .slice(0, 8)
+      .toUpperCase();
+    fixed[code] = { fixed: true, index: i, createdAt: 'fixed', votedRounds: {} };
+  }
+  return fixed;
+}
+
+// 确保 300 张固定观众门票与 5 位导师口令始终存在（保留已有投票记录）
+function ensureFixedTicketsAndJudges(targetState) {
+  const fixed = buildFixedTickets(FIXED_TICKET_COUNT);
+  const existing = targetState.tickets || {};
+  const merged = {};
+  Object.entries(fixed).forEach(([code, tpl]) => {
+    merged[code] = existing[code]
+      ? { ...tpl, ...existing[code], fixed: true, index: tpl.index, votedRounds: existing[code].votedRounds || {} }
+      : tpl;
+  });
+  // 保留额外手动生成的门票码
+  Object.entries(existing).forEach(([code, ticket]) => {
+    if (!merged[code]) merged[code] = ticket;
+  });
+  targetState.tickets = merged;
+
+  const jc = targetState.settings?.judgeCodes;
+  const isOld3Default =
+    Array.isArray(jc) && jc.length === 3 && jc[0] === 'J1' && jc[1] === 'J2' && jc[2] === 'J3';
+  if (!Array.isArray(jc) || jc.length === 0 || isOld3Default) {
+    targetState.settings.judgeCodes = [...DEFAULT_JUDGE_CODES];
+  }
+  return targetState;
+}
+
 // 默认初始数据
 function createDefaultState() {
-  return {
+  return ensureFixedTicketsAndJudges({
     settings: {
       title: '十佳歌手大赛 · 实时投票',
       mode: 'classic', // 'classic' | 'top10'
@@ -33,7 +76,7 @@ function createDefaultState() {
       startTime: '', // ISO string or empty
       endTime: '',   // ISO string or empty
       adminPassword: 'admin',
-      judgeCodes: ['J1', 'J2', 'J3'],
+      judgeCodes: [...DEFAULT_JUDGE_CODES],
       activeContestantIds: [],
       standbyMode: false,
       welcomePopupText: '欢迎来到山东大学软件学院十佳歌手大赛！\n请根据现场主持人口令为您喜爱的选手投票。'
@@ -51,7 +94,7 @@ function createDefaultState() {
     judgeVotes: {},
     // manualVotes: { [bucketKey]: { [contestantId]: number } }
     manualVotes: {}
-  };
+  });
 }
 
 let state = createDefaultState();
@@ -59,14 +102,14 @@ if (fs.existsSync(STATE_FILE)) {
   try {
     const loaded = JSON.parse(fs.readFileSync(STATE_FILE, 'utf8'));
     const def = createDefaultState();
-    state = {
+    state = ensureFixedTicketsAndJudges({
       ...def,
       ...loaded,
       settings: { ...def.settings, ...(loaded.settings || {}) },
       tickets: loaded.tickets || {},
       judgeVotes: loaded.judgeVotes || {},
       manualVotes: loaded.manualVotes || {}
-    };
+    });
   } catch (e) {
     console.error('读取状态文件失败，使用默认配置:', e);
   }
@@ -466,14 +509,14 @@ app.post('/api/admin/archive/import', requireAdmin, (req, res) => {
   }
   pushHistory('导入项目存档');
   const def = createDefaultState();
-  state = {
+  state = ensureFixedTicketsAndJudges({
     ...def,
     ...incoming,
     settings: { ...def.settings, ...incoming.settings },
     tickets: incoming.tickets || {},
     judgeVotes: incoming.judgeVotes || {},
     manualVotes: incoming.manualVotes || {}
-  };
+  });
   saveState();
   broadcastState();
   res.json({ ok: true, state: getPublicState() });
@@ -581,7 +624,7 @@ app.post('/api/admin/reset', requireAdmin, (req, res) => {
       if (state.manualVotes) delete state.manualVotes[bk];
     });
   } else if (type === 'tickets') {
-    state.tickets = {};
+    state.tickets = buildFixedTickets(FIXED_TICKET_COUNT);
   }
   saveState();
   broadcastState();
