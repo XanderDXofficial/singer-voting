@@ -44,7 +44,7 @@
       inset: 0;
       z-index: 0;
       background: url('/assets/stage-bg.png') center / cover no-repeat;
-      filter: brightness(0.92) contrast(1.04) saturate(1.06);
+      filter: brightness(1.06) contrast(1.03) saturate(1.08);
       transform: scale(1.01);
     }
 
@@ -53,8 +53,8 @@
       inset: 0;
       z-index: 1;
       background:
-        radial-gradient(ellipse 68% 62% at 50% 50%, rgba(28, 30, 86, 0.22) 0%, rgba(16, 17, 50, 0.56) 100%),
-        linear-gradient(180deg, rgba(16, 17, 50, 0.36) 0%, rgba(16, 17, 50, 0.08) 26%, rgba(16, 17, 50, 0.08) 76%, rgba(14, 15, 44, 0.42) 100%);
+        radial-gradient(ellipse 70% 64% at 50% 50%, rgba(28, 30, 86, 0.10) 0%, rgba(16, 17, 50, 0.36) 100%),
+        linear-gradient(180deg, rgba(16, 17, 50, 0.24) 0%, rgba(16, 17, 50, 0.04) 26%, rgba(16, 17, 50, 0.04) 76%, rgba(14, 15, 44, 0.28) 100%);
     }
 
     .pixel-grid {
@@ -81,7 +81,7 @@
       z-index: 2;
       pointer-events: none;
       background:
-        radial-gradient(ellipse at center, rgba(21, 20, 59, 0.52) 0%, rgba(21, 20, 59, 0.22) 52%, transparent 78%),
+        radial-gradient(ellipse at center, rgba(21, 20, 59, 0.36) 0%, rgba(21, 20, 59, 0.14) 52%, transparent 78%),
         radial-gradient(circle at 50% 45%, rgba(255, 240, 138, 0.16) 0%, transparent 56%);
       filter: blur(18px);
     }
@@ -175,8 +175,10 @@
     }
 
     .college-emblem {
-      width: clamp(36px, 4.2vh, 50px);
-      height: clamp(36px, 4.2vh, 50px);
+      height: clamp(40px, 4.6vh, 56px);
+      width: auto;
+      object-fit: contain;
+      display: block;
       flex-shrink: 0;
       filter: drop-shadow(0 2px 10px rgba(0, 0, 0, 0.35));
     }
@@ -269,6 +271,7 @@
 
     .hero-title .line {
       display: block;
+      text-indent: clamp(6px, 0.9vw, 16px);
     }
 
     .hero-subtitle-bar {
@@ -358,14 +361,7 @@
         <img class="sdu-logo" src="/assets/sdu-logo-light.png" alt="山东大学校徽" />
         <div class="brand-divider"></div>
         <div class="college-badge">
-          <!-- 山东大学软件学院等距魔方飘带院徽 -->
-          <svg class="college-emblem" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg" aria-label="山东大学软件学院院徽">
-            <path d="M32 6L55 19.2V44.8L32 58L9 44.8V19.2L32 6Z" stroke="#FDFBF2" stroke-width="2.6" stroke-linejoin="round" fill="rgba(255,255,255,0.06)"/>
-            <path d="M32 13L47 21.5L32 30L17 21.5L32 13Z" stroke="#FDFBF2" stroke-width="2.2" stroke-linejoin="round"/>
-            <path d="M17 26.5L32 35L47 26.5" stroke="#FFF08A" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>
-            <path d="M17 34.5L32 43L47 34.5" stroke="#FDFBF2" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
-            <path d="M32 30V51" stroke="#FDFBF2" stroke-width="2.2" stroke-linecap="round"/>
-          </svg>
+          <img class="college-emblem" src="/assets/sdu-software-logo-white.png" alt="山东大学软件学院院徽" />
           <div class="college-text">
             <span class="college-zh">山东大学软件学院</span>
             <span class="college-en">School of Software, Shandong University</span>
@@ -382,7 +378,7 @@
     <section class="hero-center">
       <div class="hero-eyebrow">✦ &nbsp; SHANDONG UNIVERSITY · SCHOOL OF SOFTWARE &nbsp; ✦</div>
       <h1 class="hero-title">
-        <span class="line">声赴热爱，</span>
+        <span class="line">声赴热爱</span>
         <span class="line">音启星光</span>
       </h1>
       <div class="hero-subtitle-bar">
