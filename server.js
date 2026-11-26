@@ -61,12 +61,38 @@ function ensureFixedTicketsAndJudges(targetState) {
   return targetState;
 }
 
+// 预设 16 位选手名单与三轮曲目（默认预载入，后台随时可增删改）
+const DEFAULT_TOP10_CONTESTANTS = [
+  { id: 1,  number: '01', group: 1, name: '洪浩扬',   song1: '最后一页',     song2: '陀飞轮',       song3: '说了再见' },
+  { id: 2,  number: '02', group: 1, name: '刘文洁',   song1: '最后一页',     song2: '开始懂了',     song3: '最难得' },
+  { id: 3,  number: '03', group: 2, name: '易诗妍',   song1: '如果可以',     song2: '天空',         song3: '君' },
+  { id: 4,  number: '04', group: 2, name: '田润鑫',   song1: '如果可以',     song2: '枫',           song3: '海阔天空' },
+  { id: 5,  number: '05', group: 3, name: '陈启',     song1: '因为爱情',     song2: '贝加尔湖畔',   song3: '春泥' },
+  { id: 6,  number: '06', group: 3, name: '雷可玥',   song1: '因为爱情',     song2: '爱我',         song3: '听海' },
+  { id: 7,  number: '07', group: 4, name: '王娇',     song1: '凉凉',         song2: '兰亭序',       song3: '一样的月光' },
+  { id: 8,  number: '08', group: 4, name: '安相宇',   song1: '凉凉',         song2: 'i',            song3: '年少有为' },
+  { id: 9,  number: '09', group: 5, name: '胡妍桐',   song1: '飞云之下',     song2: '阿楚姑娘',     song3: '雨天' },
+  { id: 10, number: '10', group: 5, name: '耿跃桐',   song1: '飞云之下',     song2: '达尔文',       song3: '奇妙能力歌' },
+  { id: 11, number: '11', group: 6, name: '宁悦子双', song1: '只对你有感觉', song2: '照片',         song3: '天空' },
+  { id: 12, number: '12', group: 6, name: '冯磊',     song1: '只对你有感觉', song2: '别怕变老',     song3: '童言无忌' },
+  { id: 13, number: '13', group: 7, name: '诸梓睿',   song1: '爱错',         song2: '说好的幸福呢', song3: '借口' },
+  { id: 14, number: '14', group: 7, name: '郝韵涵',   song1: '爱错',         song2: '青藏高原',     song3: '你我经历的一刻' },
+  { id: 15, number: '15', group: 8, name: '梁竣凯',   song1: 'melody',       song2: '黑夜问白天',   song3: '不能说的秘密' },
+  { id: 16, number: '16', group: 8, name: '王夕豪',   song1: 'melody',       song2: '特别的人',     song3: '你爱我还是他' }
+];
+
+function getSongForRound(c, roundNum) {
+  if (roundNum === 1) return c.song1 || c.song || '';
+  if (roundNum === 2) return c.song2 || c.song || '';
+  return c.song3 || c.song || '';
+}
+
 // 默认初始数据
 function createDefaultState() {
   return ensureFixedTicketsAndJudges({
     settings: {
       title: '十佳歌手大赛 · 实时投票',
-      mode: 'classic', // 'classic' | 'top10'
+      mode: 'top10', // 'classic' | 'top10'
       currentRound: 1,
       activeGroup: 0, // 0 = 全部，1-8 = 十佳模式第1轮双人舞台当前投票组
       screenView: 'live', // 'live' | 'r1-groups' | 'r1-duels'
@@ -81,13 +107,7 @@ function createDefaultState() {
       standbyMode: false,
       welcomePopupText: '欢迎来到山东大学软件学院十佳歌手大赛！\n请根据现场主持人口令为您喜爱的选手投票。'
     },
-    contestants: Array.from({ length: 10 }, (_, i) => ({
-      id: i + 1,
-      number: String(i + 1).padStart(2, '0'),
-      name: `选手 ${i + 1} 号`,
-      song: `参赛曲目 ${i + 1}`,
-      group: Math.floor(i / 2) + 1
-    })),
+    contestants: DEFAULT_TOP10_CONTESTANTS.map(c => ({ ...c })),
     // tickets: { [code]: { createdAt, votedRounds: { [bucketKey]: [contestantIds] } } }
     tickets: {},
     // judgeVotes: { [bucketKey]: { [judgeCode]: [contestantIds] } }
@@ -217,6 +237,7 @@ function getPublicState() {
       ? new Set(state.settings.activeContestantIds.map(Number))
       : null;
 
+  const roundNum = Number(state.settings.currentRound) || 1;
   const allScored = state.contestants
     .filter(c => !activeSet || activeSet.has(c.id))
     .map(c => {
@@ -225,6 +246,7 @@ function getPublicState() {
       const totalScore = aVotes + jVotes * weight;
       return {
         ...c,
+        song: getSongForRound(c, roundNum),
         audienceVotes: aVotes,
         judgeVotes: jVotes,
         totalScore
@@ -434,7 +456,7 @@ app.post('/api/admin/settings', requireAdmin, (req, res) => {
   res.json({ ok: true, state: getPublicState() });
 });
 
-// 选手管理（支持保留空白姓名/曲目及组别）
+// 选手管理（支持保留空白姓名/三轮曲目及组别）
 app.post('/api/admin/contestants', requireAdmin, (req, res) => {
   const { contestants } = req.body;
   if (!Array.isArray(contestants)) {
@@ -445,7 +467,9 @@ app.post('/api/admin/contestants', requireAdmin, (req, res) => {
     id: Number(c.id) || Date.now() + idx,
     number: String(c.number || idx + 1).padStart(2, '0'),
     name: c.name !== undefined ? String(c.name) : '',
-    song: c.song !== undefined ? String(c.song) : '',
+    song1: c.song1 !== undefined ? String(c.song1) : (c.song !== undefined ? String(c.song) : ''),
+    song2: c.song2 !== undefined ? String(c.song2) : '',
+    song3: c.song3 !== undefined ? String(c.song3) : '',
     group: Number(c.group) || Math.floor(idx / 2) + 1
   }));
   saveState();
@@ -453,16 +477,10 @@ app.post('/api/admin/contestants', requireAdmin, (req, res) => {
   res.json({ ok: true, contestants: state.contestants });
 });
 
-// 十佳定制模式：初始化16位空白选手（8组两人配对）
+// 十佳定制模式：重置为预设 16 位选手名单（含三轮曲目）
 app.post('/api/admin/top10/init-16', requireAdmin, (req, res) => {
-  pushHistory('初始化16位选手');
-  state.contestants = Array.from({ length: 16 }, (_, i) => ({
-    id: i + 1,
-    number: String(i + 1).padStart(2, '0'),
-    name: '',
-    song: '',
-    group: Math.floor(i / 2) + 1
-  }));
+  pushHistory('重置预设16位选手名单');
+  state.contestants = DEFAULT_TOP10_CONTESTANTS.map(c => ({ ...c }));
   state.settings.mode = 'top10';
   state.settings.currentRound = 1;
   state.settings.activeGroup = 0;

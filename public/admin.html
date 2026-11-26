@@ -254,7 +254,7 @@
         <div id="top10Panel" class="card" style="display:none; border: 2px solid #9B0D14;">
           <h2>★ 十佳定制赛制控制台（16进10 → 10进5 → 5进3）</h2>
           <div class="row-actions" style="margin-top:0; margin-bottom:14px;">
-            <button class="btn btn-crimson" onclick="initTop10Contestants()">🎬 初始化 16 位空选手（8 组两人配对）</button>
+            <button class="btn btn-crimson" onclick="initTop10Contestants()">🎬 重置为预设 16 位选手名单（含三轮曲目）</button>
             <button class="btn btn-outline" onclick="loadDashboard()">🔄 刷新当前算分结果</button>
           </div>
           <div id="top10StageBody"></div>
@@ -305,22 +305,26 @@
 
         <!-- 选手管理 -->
         <div class="card">
-          <h2>3. 选手管理（支持留空后现场填写）</h2>
-          <table>
-            <thead>
-              <tr>
-                <th>编号</th>
-                <th id="thGroup" style="display:none;">组别 (1-8)</th>
-                <th>歌手姓名</th>
-                <th>参赛曲目</th>
-                <th>观众票</th>
-                <th>导师票</th>
-                <th>总分</th>
-                <th>操作</th>
-              </tr>
-            </thead>
-            <tbody id="contestantTbody"></tbody>
-          </table>
+          <h2>3. 选手管理（已预载三轮曲目，随时可改可保存）</h2>
+          <div style="overflow-x:auto;">
+            <table>
+              <thead>
+                <tr>
+                  <th>编号</th>
+                  <th id="thGroup" style="display:none;">组别</th>
+                  <th>歌手姓名</th>
+                  <th>第1轮(双人舞台)</th>
+                  <th>第2轮(10进5)</th>
+                  <th>第3轮(5进3决赛)</th>
+                  <th>观众票</th>
+                  <th>导师票</th>
+                  <th>总分</th>
+                  <th>操作</th>
+                </tr>
+              </thead>
+              <tbody id="contestantTbody"></tbody>
+            </table>
+          </div>
           <div class="row-actions">
             <button class="btn btn-gray" onclick="addContestantRow()">➕ 添加一位选手</button>
             <button class="btn btn-crimson" onclick="saveContestants()">💾 保存选手列表</button>
@@ -533,7 +537,7 @@
     }
 
     async function initTop10Contestants() {
-      if (!confirm('将生成 16 位空白选手（分成 8 组，每组 2 人）并设为第 1 轮，确定吗？')) return;
+      if (!confirm('将重置为预设的 16 位选手名单（含 8 组与三轮曲目）并设为第 1 轮，确定吗？')) return;
       await api('/api/admin/top10/init-16', 'POST');
       loadDashboard();
     }
@@ -668,10 +672,12 @@
       const showGroup = (currentSettings.mode || 'classic') === 'top10';
       document.getElementById('contestantTbody').innerHTML = allContestants.map((c, idx) => `
         <tr>
-          <td><input style="width:60px" value="${c.number}" onchange="allContestants[${idx}].number=this.value" /></td>
-          ${showGroup ? `<td><input type="number" min="1" max="16" style="width:65px" value="${c.group || Math.floor(idx / 2) + 1}" onchange="allContestants[${idx}].group=Number(this.value)" /></td>` : ''}
-          <td><input value="${c.name || ''}" placeholder="待填写姓名" onchange="allContestants[${idx}].name=this.value" /></td>
-          <td><input value="${c.song || ''}" placeholder="待填写曲目" onchange="allContestants[${idx}].song=this.value" /></td>
+          <td><input style="width:54px" value="${c.number}" onchange="allContestants[${idx}].number=this.value" /></td>
+          ${showGroup ? `<td><input type="number" min="1" max="16" style="width:56px" value="${c.group || Math.floor(idx / 2) + 1}" onchange="allContestants[${idx}].group=Number(this.value)" /></td>` : ''}
+          <td><input style="min-width:86px" value="${c.name || ''}" placeholder="待填写姓名" onchange="allContestants[${idx}].name=this.value" /></td>
+          <td><input style="min-width:105px" value="${c.song1 !== undefined ? c.song1 : (c.song || '')}" placeholder="第1轮曲目" onchange="allContestants[${idx}].song1=this.value" /></td>
+          <td><input style="min-width:105px" value="${c.song2 || ''}" placeholder="第2轮曲目" onchange="allContestants[${idx}].song2=this.value" /></td>
+          <td><input style="min-width:105px" value="${c.song3 || ''}" placeholder="第3轮曲目" onchange="allContestants[${idx}].song3=this.value" /></td>
           <td>${c.audienceVotes}</td>
           <td>${c.judgeVotes}</td>
           <td><strong>${c.totalScore}</strong></td>
@@ -686,7 +692,9 @@
         id: Date.now(),
         number: nextNum,
         name: '',
-        song: '',
+        song1: '',
+        song2: '',
+        song3: '',
         group: Math.floor(allContestants.length / 2) + 1,
         audienceVotes: 0,
         judgeVotes: 0,
