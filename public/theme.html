@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>声赴热爱，音启星光 · 山东大学软件学院十佳歌手大赛决赛主题屏</title>
+  <style>
+    :root {
+      --indigo-deep: #15143B;
+      --indigo-panel: #1A1B4B;
+      --periwinkle: #6B75CE;
+      --starlight: #FFF08A;
+      --coral: #F48FB1;
+      --mint: #6EE7D2;
+      --cream: #FDFBF2;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html, body {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background: var(--indigo-deep);
+      color: var(--cream);
+      font-family: "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", -apple-system, BlinkMacSystemFont, sans-serif;
+    }
+
+    .canvas {
+      position: relative;
+      width: 100vw;
+      height: 100vh;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      padding: clamp(28px, 3.6vh, 52px) clamp(36px, 4.4vw, 76px);
+      background: var(--indigo-deep);
+    }
+
+    /* 门票风格 16:9 宇宙星芒与像素彩虹背景 */
+    .bg-art {
+      position: absolute;
+      inset: 0;
+      z-index: 0;
+      background: url('/assets/stage-bg.png') center / cover no-repeat;
+      filter: brightness(0.92) contrast(1.04) saturate(1.06);
+      transform: scale(1.01);
+    }
+
+    .bg-vignette {
+      position: absolute;
+      inset: 0;
+      z-index: 1;
+      background:
+        radial-gradient(ellipse 68% 62% at 50% 50%, rgba(28, 30, 86, 0.22) 0%, rgba(16, 17, 50, 0.56) 100%),
+        linear-gradient(180deg, rgba(16, 17, 50, 0.36) 0%, rgba(16, 17, 50, 0.08) 26%, rgba(16, 17, 50, 0.08) 76%, rgba(14, 15, 44, 0.42) 100%);
+    }
+
+    .pixel-grid {
+      position: absolute;
+      inset: 0;
+      z-index: 2;
+      pointer-events: none;
+      background-image:
+        linear-gradient(rgba(255, 255, 255, 0.04) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255, 255, 255, 0.04) 1px, transparent 1px);
+      background-size: 24px 24px;
+      mask-image: radial-gradient(ellipse 88% 82% at 50% 50%, #000 40%, transparent 100%);
+      -webkit-mask-image: radial-gradient(ellipse 88% 82% at 50% 50%, #000 40%, transparent 100%);
+    }
+
+    /* 中心主视觉背后柔光 */
+    .center-halo {
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      width: min(68vw, 1080px);
+      height: min(56vh, 580px);
+      transform: translate(-50%, -50%);
+      z-index: 2;
+      pointer-events: none;
+      background:
+        radial-gradient(ellipse at center, rgba(21, 20, 59, 0.52) 0%, rgba(21, 20, 59, 0.22) 52%, transparent 78%),
+        radial-gradient(circle at 50% 45%, rgba(255, 240, 138, 0.16) 0%, transparent 56%);
+      filter: blur(18px);
+    }
+
+    /* 漂浮像素星点与十字星装饰 */
+    .sparkles {
+      position: absolute;
+      inset: 0;
+      z-index: 3;
+      pointer-events: none;
+    }
+
+    .px {
+      position: absolute;
+      width: 10px;
+      height: 10px;
+      opacity: 0.85;
+      animation: floatTwinkle 5.6s ease-in-out infinite;
+    }
+    .px.lg { width: 14px; height: 14px; }
+    .px.sm { width: 7px; height: 7px; }
+    .px.gold { background: var(--starlight); box-shadow: 0 0 14px rgba(255, 240, 138, 0.7); }
+    .px.pink { background: var(--coral); box-shadow: 0 0 12px rgba(244, 143, 177, 0.65); }
+    .px.mint { background: var(--mint); box-shadow: 0 0 12px rgba(110, 231, 210, 0.65); }
+    .px.cream { background: var(--cream); box-shadow: 0 0 12px rgba(253, 251, 242, 0.6); }
+
+    .px-plus {
+      position: absolute;
+      width: 18px;
+      height: 18px;
+      opacity: 0.88;
+      animation: floatTwinkle 6.4s ease-in-out infinite;
+    }
+    .px-plus::before,
+    .px-plus::after {
+      content: "";
+      position: absolute;
+      background: var(--starlight);
+      box-shadow: 0 0 12px rgba(255, 240, 138, 0.65);
+    }
+    .px-plus::before { width: 100%; height: 4px; left: 0; top: 7px; }
+    .px-plus::after { width: 4px; height: 100%; left: 7px; top: 0; }
+    .px-plus.cream::before, .px-plus.cream::after { background: var(--cream); box-shadow: 0 0 12px rgba(253, 251, 242, 0.55); }
+
+    @keyframes floatTwinkle {
+      0%, 100% { transform: translateY(0) scale(1); opacity: 0.88; }
+      50% { transform: translateY(-6px) scale(0.84); opacity: 0.45; }
+    }
+
+    /* 顶部区域：左上校徽+软件学院标，右上 SDU / SOFTWARE FINALS */
+    .topbar {
+      position: relative;
+      z-index: 5;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 24px;
+    }
+
+    .brand-lockup {
+      display: flex;
+      align-items: center;
+      gap: clamp(16px, 1.8vw, 28px);
+      padding: 12px 22px 12px 18px;
+      border-radius: 16px;
+      background: rgba(21, 20, 59, 0.34);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      border: 1px solid rgba(255, 255, 255, 0.14);
+      box-shadow: 0 10px 28px rgba(10, 10, 34, 0.28);
+    }
+
+    .sdu-logo {
+      height: clamp(38px, 4.4vh, 54px);
+      width: auto;
+      display: block;
+      filter: drop-shadow(0 2px 10px rgba(0, 0, 0, 0.35));
+    }
+
+    .brand-divider {
+      width: 1.5px;
+      height: clamp(32px, 3.8vh, 46px);
+      background: linear-gradient(180deg, transparent, rgba(253, 251, 242, 0.65), transparent);
+      flex-shrink: 0;
+    }
+
+    .college-badge {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .college-emblem {
+      width: clamp(36px, 4.2vh, 50px);
+      height: clamp(36px, 4.2vh, 50px);
+      flex-shrink: 0;
+      filter: drop-shadow(0 2px 10px rgba(0, 0, 0, 0.35));
+    }
+
+    .college-text {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .college-zh {
+      font-size: clamp(18px, 1.65vw, 25px);
+      font-weight: 700;
+      letter-spacing: 2px;
+      color: var(--cream);
+      line-height: 1.15;
+      text-shadow: 0 2px 10px rgba(12, 12, 36, 0.55);
+    }
+
+    .college-en {
+      font-size: clamp(8.5px, 0.65vw, 11px);
+      font-weight: 600;
+      letter-spacing: 1.4px;
+      color: rgba(253, 251, 242, 0.78);
+      text-transform: uppercase;
+    }
+
+    .top-right-tag {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 8px;
+      padding: 10px 4px;
+    }
+
+    .top-right-code {
+      font-family: "SF Mono", "Menlo", "Monaco", monospace;
+      font-size: clamp(12px, 1.05vw, 16px);
+      font-weight: 700;
+      letter-spacing: 4px;
+      color: rgba(253, 251, 242, 0.9);
+      text-shadow: 0 2px 12px rgba(10, 10, 34, 0.65);
+    }
+
+    .top-right-rule {
+      width: clamp(140px, 14vw, 240px);
+      height: 1.5px;
+      background: linear-gradient(90deg, transparent, rgba(255, 240, 138, 0.75), rgba(253, 251, 242, 0.85));
+    }
+
+    /* 中央核心主视觉 */
+    .hero-center {
+      position: relative;
+      z-index: 5;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding-bottom: clamp(8px, 1.6vh, 24px);
+    }
+
+    .hero-eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 14px;
+      font-size: clamp(12px, 1.05vw, 17px);
+      font-weight: 700;
+      letter-spacing: 5px;
+      color: var(--starlight);
+      text-transform: uppercase;
+      margin-bottom: clamp(14px, 2.2vh, 26px);
+      text-shadow: 0 2px 16px rgba(16, 17, 50, 0.85);
+    }
+
+    .hero-title {
+      font-size: clamp(64px, 7.6vw, 132px);
+      font-weight: 900;
+      line-height: 1.12;
+      letter-spacing: clamp(6px, 0.9vw, 16px);
+      color: var(--cream);
+      text-shadow:
+        0 6px 0 #1E205A,
+        0 10px 0 rgba(16, 17, 50, 0.55),
+        0 20px 54px rgba(10, 10, 34, 0.78);
+      margin-bottom: clamp(22px, 3.2vh, 40px);
+      user-select: none;
+    }
+
+    .hero-title .line {
+      display: block;
+    }
+
+    .hero-subtitle-bar {
+      display: inline-flex;
+      align-items: center;
+      gap: 14px;
+      padding: clamp(10px, 1.3vh, 16px) clamp(26px, 3vw, 48px);
+      border-radius: 10px;
+      background: rgba(26, 27, 75, 0.92);
+      border: 1.5px solid rgba(255, 240, 138, 0.65);
+      box-shadow:
+        0 8px 0 rgba(14, 15, 44, 0.85),
+        0 18px 44px rgba(8, 8, 28, 0.65),
+        inset 0 1px 0 rgba(255, 255, 255, 0.2);
+    }
+
+    .hero-subtitle-dot {
+      width: 8px;
+      height: 8px;
+      background: var(--starlight);
+      box-shadow: 0 0 10px var(--starlight);
+      flex-shrink: 0;
+    }
+
+    .hero-subtitle-text {
+      font-size: clamp(20px, 2.15vw, 36px);
+      font-weight: 800;
+      letter-spacing: clamp(4px, 0.55vw, 9px);
+      color: var(--cream);
+    }
+
+    /* 底部极简角标 */
+    .bottombar {
+      position: relative;
+      z-index: 5;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 20px;
+      font-family: "SF Mono", "Menlo", "Monaco", monospace;
+    }
+
+    .bottom-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 12px;
+      padding: 8px 18px;
+      border-radius: 999px;
+      background: rgba(21, 20, 59, 0.45);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      border: 1px solid rgba(176, 188, 255, 0.24);
+      font-size: clamp(12px, 1vw, 15px);
+      font-weight: 700;
+      letter-spacing: 2.6px;
+      color: rgba(253, 251, 242, 0.86);
+    }
+
+    .bottom-pill .accent {
+      color: var(--starlight);
+    }
+  </style>
+</head>
+<body>
+  <main class="canvas">
+    <div class="bg-art"></div>
+    <div class="bg-vignette"></div>
+    <div class="pixel-grid"></div>
+    <div class="center-halo"></div>
+
+    <div class="sparkles" aria-hidden="true">
+      <span class="px gold lg" style="top: 18%; left: 12%; animation-delay: 0s;"></span>
+      <span class="px pink" style="top: 28%; left: 21%; animation-delay: -1.4s;"></span>
+      <span class="px mint sm" style="top: 66%; left: 10%; animation-delay: -2.8s;"></span>
+      <span class="px cream" style="top: 76%; left: 24%; animation-delay: -0.9s;"></span>
+      <span class="px-plus" style="top: 34%; left: 15%; animation-delay: -3.2s;"></span>
+
+      <span class="px gold lg" style="top: 20%; right: 14%; animation-delay: -1.1s;"></span>
+      <span class="px mint" style="top: 31%; right: 20%; animation-delay: -2.5s;"></span>
+      <span class="px pink lg" style="top: 67%; right: 12%; animation-delay: -0.6s;"></span>
+      <span class="px cream sm" style="top: 79%; right: 23%; animation-delay: -3.8s;"></span>
+      <span class="px-plus cream" style="top: 48%; right: 10%; animation-delay: -1.9s;"></span>
+    </div>
+
+    <header class="topbar">
+      <div class="brand-lockup">
+        <img class="sdu-logo" src="/assets/sdu-logo-light.png" alt="山东大学校徽" />
+        <div class="brand-divider"></div>
+        <div class="college-badge">
+          <!-- 山东大学软件学院等距魔方飘带院徽 -->
+          <svg class="college-emblem" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg" aria-label="山东大学软件学院院徽">
+            <path d="M32 6L55 19.2V44.8L32 58L9 44.8V19.2L32 6Z" stroke="#FDFBF2" stroke-width="2.6" stroke-linejoin="round" fill="rgba(255,255,255,0.06)"/>
+            <path d="M32 13L47 21.5L32 30L17 21.5L32 13Z" stroke="#FDFBF2" stroke-width="2.2" stroke-linejoin="round"/>
+            <path d="M17 26.5L32 35L47 26.5" stroke="#FFF08A" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M17 34.5L32 43L47 34.5" stroke="#FDFBF2" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M32 30V51" stroke="#FDFBF2" stroke-width="2.2" stroke-linecap="round"/>
+          </svg>
+          <div class="college-text">
+            <span class="college-zh">山东大学软件学院</span>
+            <span class="college-en">School of Software, Shandong University</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="top-right-tag">
+        <div class="top-right-code">SDU / SOFTWARE FINALS</div>
+        <div class="top-right-rule"></div>
+      </div>
+    </header>
+
+    <section class="hero-center">
+      <div class="hero-eyebrow">✦ &nbsp; SHANDONG UNIVERSITY · SCHOOL OF SOFTWARE &nbsp; ✦</div>
+      <h1 class="hero-title">
+        <span class="line">声赴热爱，</span>
+        <span class="line">音启星光</span>
+      </h1>
+      <div class="hero-subtitle-bar">
+        <span class="hero-subtitle-dot"></span>
+        <span class="hero-subtitle-text">软件学院十佳歌手大赛决赛</span>
+        <span class="hero-subtitle-dot"></span>
+      </div>
+    </section>
+
+    <footer class="bottombar">
+      <div class="bottom-pill">
+        <span class="accent">11.28</span>
+        <span>SAT · 19:00</span>
+      </div>
+      <div class="bottom-pill">
+        <span>SDU / SOFTWARE</span>
+        <span class="accent">TOP 10 SINGERS</span>
+      </div>
+    </footer>
+  </main>
+</body>
+</html>
