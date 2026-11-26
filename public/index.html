@@ -6,7 +6,7 @@
   <title>十佳歌手大赛 · 观众投票</title>
   <style>
     :root {
-      --indigo-deep: #0C0D26;
+      --indigo-deep: #090A1A;
       --periwinkle: #6B75CE;
       --starlight: #FFF08A;
       --coral: #F48FB1;
@@ -32,11 +32,8 @@
       z-index: 0;
       pointer-events: none;
       background:
-        radial-gradient(ellipse 95% 48% at 50% -5%, rgba(107, 117, 206, 0.34) 0%, transparent 70%),
-        radial-gradient(circle at 86% 24%, rgba(255, 240, 138, 0.11) 0%, transparent 45%),
-        radial-gradient(circle at 88% 82%, rgba(244, 143, 177, 0.12) 0%, transparent 50%),
-        radial-gradient(circle at 12% 72%, rgba(110, 231, 210, 0.09) 0%, transparent 50%),
-        linear-gradient(180deg, #13153C 0%, #0A0B22 100%);
+        radial-gradient(ellipse 85% 40% at 50% -8%, rgba(74, 84, 168, 0.16) 0%, transparent 72%),
+        linear-gradient(180deg, #0D0F26 0%, #080918 100%);
     }
 
     .stage-grid {
@@ -45,8 +42,8 @@
       z-index: 0;
       pointer-events: none;
       background-image:
-        linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+        linear-gradient(rgba(255, 255, 255, 0.018) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255, 255, 255, 0.018) 1px, transparent 1px);
       background-size: 24px 24px;
       mask-image: radial-gradient(ellipse 90% 80% at 50% 35%, #000 30%, transparent 100%);
       -webkit-mask-image: radial-gradient(ellipse 90% 80% at 50% 35%, #000 30%, transparent 100%);
@@ -659,7 +656,12 @@
       const groupPrefix = settings.mode === 'top10' && Number(settings.currentRound) === 1 && Number(settings.activeGroup) > 0
         ? `第 ${settings.activeGroup} 组双人舞台 · `
         : '';
-      roundBadgeEl.textContent = `第 ${settings.currentRound} 轮 · ${groupPrefix}每人限投 ${settings.maxVotesPerTicket} 票${code ? ` · 票码 ${code}` : ''}`;
+      const maxV = Math.max(1, Number(settings.maxVotesPerTicket) || 1);
+      const minV = Math.min(Math.max(1, Number(settings.minVotesPerTicket) || 1), maxV);
+      const voteRuleText = minV === maxV && maxV > 1
+        ? `每人需投 ${maxV} 票`
+        : (minV > 1 && minV < maxV ? `每人需投 ${minV}~${maxV} 票` : `每人限投 ${maxV} 票`);
+      roundBadgeEl.textContent = `第 ${settings.currentRound} 轮 · ${groupPrefix}${voteRuleText}${code ? ` · 票码 ${code}` : ''}`;
 
       if (!ticketInfo) {
         if (!code) showBanner('请扫描门票上的专属二维码进入投票页面', 'error');
@@ -711,7 +713,7 @@
             <div class="card-left">
               <div class="num">${c.number}</div>
               <div>
-                <div class="name">${c.number}号 ${c.name || '待填写选手'}</div>
+                <div class="name">${c.name || '待填写选手'}</div>
                 ${songText ? `<div class="song">${songText}</div>` : ''}
               </div>
             </div>
@@ -753,10 +755,16 @@
         submitBtn.textContent = '当前未开放投票';
         return;
       }
-      submitBtn.disabled = selectedIds.size === 0;
-      submitBtn.textContent = selectedIds.size > 0
-        ? `确认投票（已选 ${selectedIds.size} 人）`
-        : '请选择选手';
+      const maxV = Math.max(1, Number(appState.settings.maxVotesPerTicket) || 1);
+      const minV = Math.min(Math.max(1, Number(appState.settings.minVotesPerTicket) || 1), maxV);
+      submitBtn.disabled = selectedIds.size < minV;
+      if (selectedIds.size === 0) {
+        submitBtn.textContent = minV > 1 ? `请至少选择 ${minV} 位选手` : '请选择选手';
+      } else if (selectedIds.size < minV) {
+        submitBtn.textContent = `还需再选 ${minV - selectedIds.size} 人（已选 ${selectedIds.size}/${minV}）`;
+      } else {
+        submitBtn.textContent = `确认投票（已选 ${selectedIds.size} 人）`;
+      }
     }
 
     submitBtn.onclick = async () => {

@@ -6,7 +6,7 @@
   <title>导师专属投票通道</title>
   <style>
     :root {
-      --indigo-deep: #15143B;
+      --indigo-deep: #090A1A;
       --periwinkle: #6B75CE;
       --starlight: #FFF08A;
       --coral: #F48FB1;
@@ -32,11 +32,8 @@
       z-index: 0;
       pointer-events: none;
       background:
-        radial-gradient(ellipse 95% 48% at 50% -5%, rgba(107, 117, 206, 0.55) 0%, transparent 70%),
-        radial-gradient(circle at 86% 24%, rgba(255, 240, 138, 0.22) 0%, transparent 45%),
-        radial-gradient(circle at 88% 82%, rgba(244, 143, 177, 0.22) 0%, transparent 50%),
-        radial-gradient(circle at 12% 72%, rgba(110, 231, 210, 0.16) 0%, transparent 50%),
-        linear-gradient(180deg, #1F225C 0%, #121236 100%);
+        radial-gradient(ellipse 85% 40% at 50% -8%, rgba(74, 84, 168, 0.16) 0%, transparent 72%),
+        linear-gradient(180deg, #0D0F26 0%, #080918 100%);
     }
 
     .stage-grid {
@@ -45,8 +42,8 @@
       z-index: 0;
       pointer-events: none;
       background-image:
-        linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+        linear-gradient(rgba(255, 255, 255, 0.018) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255, 255, 255, 0.018) 1px, transparent 1px);
       background-size: 24px 24px;
       mask-image: radial-gradient(ellipse 90% 80% at 50% 35%, #000 30%, transparent 100%);
       -webkit-mask-image: radial-gradient(ellipse 90% 80% at 50% 35%, #000 30%, transparent 100%);
@@ -616,7 +613,7 @@
             <div class="card-left">
               <div class="num">${c.number}</div>
               <div>
-                <div class="name">${c.number}号 ${c.name || '待填写选手'}</div>
+                <div class="name">${c.name || '待填写选手'}</div>
                 ${songText ? `<div class="song">${songText}</div>` : ''}
               </div>
             </div>

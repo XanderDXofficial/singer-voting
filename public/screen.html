@@ -6,7 +6,7 @@
   <title>十佳歌手大赛 · 实时大屏榜单</title>
   <style>
     :root {
-      --indigo-deep: #15143B;
+      --indigo-deep: #090A1A;
       --periwinkle: #6B75CE;
       --starlight: #FFF08A;
       --coral: #F48FB1;
@@ -43,16 +43,16 @@
       z-index: 0;
       pointer-events: none;
       overflow: hidden;
-      background: linear-gradient(180deg, rgba(10, 10, 32, 0.74) 0%, rgba(8, 9, 26, 0.88) 100%);
+      background: linear-gradient(180deg, rgba(9, 10, 26, 0.88) 0%, rgba(6, 7, 18, 0.95) 100%);
     }
 
     .stage-bg::before {
       content: "";
       position: absolute;
-      inset: -28px;
+      inset: -48px;
       background: url('/assets/stage-bg.png') center / cover no-repeat;
-      filter: blur(18px) brightness(0.42) saturate(0.85);
-      transform: scale(1.06);
+      filter: blur(44px) brightness(0.22) saturate(0.3);
+      transform: scale(1.1);
       z-index: -1;
     }
 
@@ -62,8 +62,8 @@
       z-index: 0;
       pointer-events: none;
       background-image:
-        linear-gradient(rgba(255, 255, 255, 0.025) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(255, 255, 255, 0.025) 1px, transparent 1px);
+        linear-gradient(rgba(255, 255, 255, 0.018) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255, 255, 255, 0.018) 1px, transparent 1px);
       background-size: 24px 24px;
       mask-image: radial-gradient(ellipse 90% 80% at 50% 45%, #000 35%, transparent 100%);
       -webkit-mask-image: radial-gradient(ellipse 90% 80% at 50% 45%, #000 35%, transparent 100%);
@@ -73,7 +73,7 @@
       position: absolute;
       border-radius: 50%;
       filter: blur(95px);
-      opacity: 0.18;
+      opacity: 0.06;
       animation: drift 16s ease-in-out infinite alternate;
     }
     .orb-1 {

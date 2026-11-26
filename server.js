@@ -96,6 +96,7 @@ function createDefaultState() {
       currentRound: 1,
       activeGroup: 0, // 0 = 全部，1-8 = 十佳模式第1轮双人舞台当前投票组
       screenView: 'live', // 'live' | 'r1-groups' | 'r1-duels'
+      minVotesPerTicket: 1,
       maxVotesPerTicket: 1,
       judgeWeight: 20, // 1张导师票 = 20张观众票
       votingStatus: 'paused', // 'open' | 'paused' | 'ended'
@@ -279,7 +280,8 @@ function getPublicState() {
       currentRound: state.settings.currentRound,
       activeGroup: activeGroupNum,
       screenView: state.settings.screenView || 'live',
-      maxVotesPerTicket: state.settings.maxVotesPerTicket,
+      minVotesPerTicket: Math.min(Math.max(1, Number(state.settings.minVotesPerTicket) || 1), Math.max(1, Number(state.settings.maxVotesPerTicket) || 1)),
+      maxVotesPerTicket: Math.max(1, Number(state.settings.maxVotesPerTicket) || 1),
       judgeWeight: state.settings.judgeWeight,
       votingStatus: state.settings.votingStatus,
       startTime: state.settings.startTime,
@@ -435,6 +437,7 @@ app.post('/api/admin/settings', requireAdmin, (req, res) => {
     'currentRound',
     'activeGroup',
     'screenView',
+    'minVotesPerTicket',
     'maxVotesPerTicket',
     'judgeWeight',
     'votingStatus',
@@ -451,6 +454,11 @@ app.post('/api/admin/settings', requireAdmin, (req, res) => {
       state.settings[key] = req.body[key];
     }
   });
+  state.settings.maxVotesPerTicket = Math.max(1, Number(state.settings.maxVotesPerTicket) || 1);
+  state.settings.minVotesPerTicket = Math.min(
+    Math.max(1, Number(state.settings.minVotesPerTicket) || 1),
+    state.settings.maxVotesPerTicket
+  );
   saveState();
   broadcastState();
   res.json({ ok: true, state: getPublicState() });
@@ -689,8 +697,13 @@ app.post('/api/vote', (req, res) => {
     return res.status(400).json({ error: '请至少选择一位选手' });
   }
   const uniqueIds = [...new Set(contestantIds.map(Number))];
-  if (uniqueIds.length > Number(state.settings.maxVotesPerTicket)) {
-    return res.status(400).json({ error: `每轮最多只能投 ${state.settings.maxVotesPerTicket} 票` });
+  const maxVotes = Math.max(1, Number(state.settings.maxVotesPerTicket) || 1);
+  const minVotes = Math.min(Math.max(1, Number(state.settings.minVotesPerTicket) || 1), maxVotes);
+  if (uniqueIds.length < minVotes) {
+    return res.status(400).json({ error: `每轮至少需要投 ${minVotes} 票` });
+  }
+  if (uniqueIds.length > maxVotes) {
+    return res.status(400).json({ error: `每轮最多只能投 ${maxVotes} 票` });
   }
   const validIds = new Set(state.contestants.map(c => c.id));
   if (uniqueIds.some(id => !validIds.has(id))) {

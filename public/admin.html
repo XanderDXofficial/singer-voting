@@ -273,7 +273,11 @@
               <input id="cfgRound" type="number" min="1" />
             </div>
             <div>
-              <label>每张门票每轮限投几票</label>
+              <label>每张门票每轮至少投几票（下限）</label>
+              <input id="cfgMinVotes" type="number" min="1" />
+            </div>
+            <div>
+              <label>每张门票每轮最多投几票（上限）</label>
               <input id="cfgMaxVotes" type="number" min="1" />
             </div>
             <div>
@@ -469,6 +473,7 @@
 
       document.getElementById('cfgTitle').value = settings.title;
       document.getElementById('cfgRound').value = settings.currentRound;
+      document.getElementById('cfgMinVotes').value = settings.minVotesPerTicket || 1;
       document.getElementById('cfgMaxVotes').value = settings.maxVotesPerTicket;
       document.getElementById('cfgWeight').value = settings.judgeWeight;
       document.getElementById('cfgStartTime').value = settings.startTime || '';
@@ -720,10 +725,16 @@
     }
 
     async function saveSettings() {
+      const minVotesPerTicket = Math.max(1, Number(document.getElementById('cfgMinVotes').value) || 1);
+      const maxVotesPerTicket = Math.max(1, Number(document.getElementById('cfgMaxVotes').value) || 1);
+      if (minVotesPerTicket > maxVotesPerTicket) {
+        return alert('每轮最少投票数（下限）不能大于最多投票数（上限）');
+      }
       await api('/api/admin/settings', 'POST', {
         title: document.getElementById('cfgTitle').value,
         currentRound: Number(document.getElementById('cfgRound').value),
-        maxVotesPerTicket: Number(document.getElementById('cfgMaxVotes').value),
+        minVotesPerTicket,
+        maxVotesPerTicket,
         judgeWeight: Number(document.getElementById('cfgWeight').value),
         startTime: document.getElementById('cfgStartTime').value,
         endTime: document.getElementById('cfgEndTime').value,
